@@ -64,6 +64,14 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .fc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .fc div{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 6px;text-align:center;font-size:12px;color:var(--mut)}
 .fc b{display:block;font-size:15px;margin-top:2px}
+.fcs{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.fcard{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:2px solid var(--bd);border-radius:14px;padding:12px 14px;cursor:pointer}
+.fcard.on{border-color:var(--pri);background:var(--soft)}
+.fcard .fn{font-weight:700;font-size:16px}
+.fcard .fs{font-size:13px;color:var(--mut);margin-top:2px}
+.fcard .fb{font-size:24px;font-weight:800;white-space:nowrap;text-align:right}
+.fcard .fb small{display:block;font-size:11px;font-weight:400;color:var(--mut)}
+.ftot{font-size:13px;color:var(--mut);text-align:center}
 .mini{padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px}
 </style>
 </head>
@@ -82,8 +90,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     </div>
     <div class="card">
       <b>🏦 ชื่อกองทุน (ทั้งสองคนเห็นชื่อเดียวกัน)</b>
-      <div class="hint" style="margin-bottom:8px">ตั้งชื่อเองได้ เช่น “ของแบงค์”, “ของแฟน”, “ของร้าน” (ใช้ได้หลังเริ่มใช้งานแล้ว)</div>
-      <input id="fn1" maxlength="20" placeholder="กองทุนที่ 1"><input id="fn2" maxlength="20" placeholder="กองทุนที่ 2"><input id="fn3" maxlength="20" placeholder="ร้าน">
+      <div class="hint" style="margin-bottom:8px">ตั้งชื่อเปลี่ยนเองได้ เช่น “ของแก๊ส”, “ของน้ำ”, “ของร้าน” (ใช้ได้หลังเริ่มใช้งานแล้ว)</div>
+      <input id="fn1" maxlength="20" placeholder="ของแก๊ส"><input id="fn2" maxlength="20" placeholder="ของน้ำ"><input id="fn3" maxlength="20" placeholder="ของร้าน">
       <button class="mini" id="fnSave">บันทึกชื่อกองทุน</button>
     </div>
     <div class="card">
@@ -100,14 +108,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   </section>
 
   <section id="p-home" class="hide">
-    <div class="chips" id="fundBar"></div>
     <div class="mon"><button id="prev">‹</button><b id="monLbl"></b><button id="next">›</button></div>
-    <div class="card sum">
-      <div class="big"><small>คงเหลือ</small><b id="sBal">0</b></div>
-      <div><small>รายรับ</small><b class="inc" id="sInc">0</b></div>
-      <div><small>รายจ่าย</small><b class="exp" id="sExp">0</b></div>
-    </div>
-    <div class="fc" id="fundCards"></div>
+    <div class="fcs" id="fundCards"></div>
     <div class="card"><div id="list"></div></div>
   </section>
 
@@ -142,11 +144,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION="1.2";
+  var APP_VERSION="1.3";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-  var S={funds:{f1:"กองทุนที่ 1",f2:"กองทุนที่ 2",shop:"ร้าน"},fund:"all",tx:[],logs:[],members:[],logsReady:false,name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
+  var S={funds:{f1:"ของแก๊ส",f2:"ของน้ำ",shop:"ของร้าน"},fund:"all",tx:[],logs:[],members:[],logsReady:false,name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
   S.month.setDate(1);
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
   function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -201,17 +203,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   function fillFunds(){
     var cur=$("fFund").value||(S.fund!=="all"?S.fund:ls("m_lastfund"))||"f1";
     var s=$("fFund");s.textContent="";FK.forEach(function(k){var o=el("option",null,fname(k));o.value=k;s.appendChild(o)});s.value=cur;
-    var bar=$("fundBar");bar.textContent="";
-    [["all","ทั้งหมด"]].concat(FK.map(function(k){return[k,fname(k)]})).forEach(function(p){
-      var b=el("button",S.fund===p[0]?"on":"",p[1]);
-      b.onclick=function(){S.fund=p[0];if(p[0]!=="all")$("fFund").value=p[0];fillFunds();render()};
-      bar.appendChild(b);
-    });
     [["fn1","f1"],["fn2","f2"],["fn3","shop"]].forEach(function(p){var i=$(p[0]);if(document.activeElement!==i)i.value=S.funds[p[1]]});
   }
   $("fnSave").onclick=function(){
     if(!S.db||!S.room)return;
-    var d={f1:$("fn1").value.trim()||"กองทุนที่ 1",f2:$("fn2").value.trim()||"กองทุนที่ 2",shop:$("fn3").value.trim()||"ร้าน"};
+    var d={f1:$("fn1").value.trim()||"ของแก๊ส",f2:$("fn2").value.trim()||"ของน้ำ",shop:$("fn3").value.trim()||"ของร้าน"};
     col("settings").doc("funds").set(d).then(function(){toast("บันทึกชื่อกองทุนแล้ว")}).catch(function(e){showErr("บันทึกชื่อไม่สำเร็จ: "+e.message)});
   };
   function desc(g){var sn=g.snap||{};return g.by+(g.action==="delete"?" ลบ":" เพิ่ม")+(sn.type==="inc"?"รายรับ ":"รายจ่าย ")+(sn.fund?"["+fname(sn.fund)+"] ":"")+(sn.category||"")+" "+fmt(sn.amount||0)+" บาท"}
@@ -257,11 +253,29 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     $("monLbl").textContent=TH[S.month.getMonth()]+" "+(S.month.getFullYear()+543);
     var items=S.tx.filter(function(t){return(t.date||"").slice(0,7)===key&&(S.fund==="all"||fundOf(t)===S.fund)});
     var fc=$("fundCards");fc.textContent="";
-    FK.forEach(function(k){var tot=0;S.tx.forEach(function(t){if(fundOf(t)===k)tot+=(t.type==="inc"?1:-1)*t.amount});
-      var d=el("div",null,fname(k)+" (สะสม)");d.appendChild(el("b",tot<0?"exp":"inc",(tot<0?"-":"")+fmt(Math.abs(tot))));fc.appendChild(d)});
-    var inc=0,exp=0;items.forEach(function(t){if(t.type==="inc")inc+=t.amount;else exp+=t.amount});
-    $("sInc").textContent=fmt(inc);$("sExp").textContent=fmt(exp);
-    var bal=inc-exp,b=$("sBal");b.textContent=(bal<0?"-":"")+fmt(Math.abs(bal));b.className=bal<0?"exp":"inc";
+    var allTot=0;
+    FK.forEach(function(k){
+      var tot=0,mi=0,me=0;
+      S.tx.forEach(function(t){
+        if(fundOf(t)!==k)return;
+        tot+=(t.type==="inc"?1:-1)*t.amount;
+        if((t.date||"").slice(0,7)===key){if(t.type==="inc")mi+=t.amount;else me+=t.amount}
+      });
+      allTot+=tot;
+      var c=el("div","fcard"+(S.fund===k?" on":"")),l=el("div");
+      l.appendChild(el("div","fn",fname(k)));
+      var sm=el("div","fs");sm.appendChild(document.createTextNode("เดือนนี้ "));
+      sm.appendChild(el("span","inc","+"+fmt(mi)));sm.appendChild(document.createTextNode("  "));sm.appendChild(el("span","exp","-"+fmt(me)));
+      l.appendChild(sm);
+      var r=el("div","fb "+(tot<0?"exp":"inc"),(tot<0?"-":"")+fmt(Math.abs(tot))+" ฿");r.appendChild(el("small",null,"คงเหลือ"));
+      c.appendChild(l);c.appendChild(r);
+      c.onclick=function(){S.fund=S.fund===k?"all":k;if(S.fund!=="all")$("fFund").value=k;render()};
+      fc.appendChild(c);
+    });
+    var tt=el("div","ftot");tt.appendChild(document.createTextNode("รวมทุกกองทุน "));
+    tt.appendChild(el("b",allTot<0?"exp":"inc",(allTot<0?"-":"")+fmt(Math.abs(allTot))+" ฿"));
+    tt.appendChild(document.createTextNode(" · แตะกองทุนเพื่อดูเฉพาะรายการของกองทุนนั้น (แตะซ้ำเพื่อดูทั้งหมด)"));
+    fc.appendChild(tt);
     var list=$("list");list.textContent="";
     if(!items.length)list.appendChild(el("div","emp","ยังไม่มีรายการในเดือนนี้"));
     items.forEach(function(t){
@@ -339,9 +353,12 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     }catch(e){}
   }
   $("updBtn").onclick=async function(){
-    try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
-      if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(x){return x.update()}))}}catch(e){}
-    location.reload();
+    var btn=this;btn.disabled=true;btn.textContent="กำลังอัปเดต…";
+    try{
+      if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
+      if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(x){return x.unregister()}))}
+    }catch(e){}
+    location.replace(location.pathname+"?v="+Date.now());
   };
   document.addEventListener("visibilitychange",function(){if(!document.hidden)checkUpdate()});
   setInterval(checkUpdate,300000);setTimeout(checkUpdate,3000);
@@ -357,7 +374,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     }
   }catch(e){showErr("เริ่มระบบไม่สำเร็จ: "+(e&&e.message||e));show("setup")}
 
-  if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
+  if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(function(){})});
 })();
 </script>
 </body>
