@@ -74,6 +74,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .fcs{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .fcard{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:2px solid var(--bd);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
 .fcard.on{border-color:var(--pri);background:var(--soft);box-shadow:0 0 0 2px var(--pri)}
+.fcard.top{border-color:var(--pri);background:linear-gradient(135deg,var(--soft),var(--card))}
+.fcard.top .fb{font-size:26px}
+.fcard.top .fn{font-size:16px}
+.pop{animation:pop .5s ease}
+@keyframes pop{from{transform:scale(.95);opacity:.4}to{transform:none;opacity:1}}
 .fcard .fn{font-weight:700;font-size:15px}
 .fcard .fs{font-size:13px;color:var(--mut);margin-top:2px}
 .fcard .fb{font-size:22px;font-weight:800;white-space:nowrap;text-align:right}
@@ -477,7 +482,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION = "2.1";
+  var APP_VERSION = "2.2";
   var $ = function(i){ return document.getElementById(i); };
   var TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   var DEFAULT_CATS = {
@@ -1164,13 +1169,18 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       return {k: k, tot: tot, mi: mi, me: me};
     });
 
+    // จัดอันดับกองทุนตามยอดเงินคงเหลือสะสมมากไปน้อย
+    rows.sort(function(a, b){ return b.tot - a.tot; });
+
     var allTot = rows.reduce(function(s, r){ return s + r.tot; }, 0);
     var maxTot = Math.max.apply(null, rows.map(function(r){ return r.tot; }));
+    var order = rows.map(function(r){ return r.k; }).join(",");
+    var reorder = S.order && S.order !== order; S.order = order;
     var medals = ["🥇", "🥈", "🥉", "🏅", "🎖️", "⭐", "💎"];
     S.shown = S.shown || {}; S.pct = S.pct || {};
 
     rows.forEach(function(r, i){
-      var c = el("div", "fcard" + (S.fund === r.k ? " on" : "")), l = el("div", "fl");
+      var c = el("div", "fcard" + (i === 0 ? " top" : "") + (S.fund === r.k ? " on" : "") + (reorder ? " pop" : "")), l = el("div", "fl");
       var medal = medals[i] || "🔹";
       l.appendChild(el("div", "fn", medal + " " + fname(r.k)));
       var sm = el("div", "fs");
