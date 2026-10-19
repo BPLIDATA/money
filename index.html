@@ -179,8 +179,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     </div>
   </div>
   <div id="userBar" class="row hide" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px 12px;margin-bottom:10px;font-size:13px">
-    <span>👤 ใช้งานในชื่อ: <b id="curUserLbl" style="color:var(--pri)">แก๊ส</b></span>
-    <button type="button" class="mini" id="quickSwitchUserBtn" style="padding:4px 9px;font-size:12px;border-radius:6px;background:var(--soft);color:var(--pri);font-weight:700">🔄 สลับเป็นแฟน (น้ำ)</button>
+    <span>👤 ใช้งานในชื่อ: <b id="curUserLbl" style="color:var(--pri)">แก๊ส</b> <span id="curUserBadge" style="font-size:11px;color:var(--mut)"></span></span>
+    <button type="button" class="mini hide" id="quickSwitchUserBtn" style="padding:4px 9px;font-size:12px;border-radius:6px;background:var(--soft);color:var(--pri);font-weight:700">🔄 สลับเป็นแฟน (น้ำ)</button>
   </div>
   <div id="err" class="card hide"></div>
 
@@ -197,6 +197,19 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <input id="sName" maxlength="20" placeholder="เช่น แก๊ส หรือ น้ำ">
       <label>รหัสห้อง (อย่างน้อย 8 ตัวอักษร)</label><input id="sRoom" maxlength="40" placeholder="เช่น mooban-8842-kaew" autocapitalize="off" autocorrect="off">
       <button class="go" id="sGo">เริ่มใช้งาน</button>
+    </div>
+
+    <!-- รหัสความปลอดภัยสิทธิ์ของแก๊ส (แสดงเฉพาะบนเครื่องของแก๊ส) -->
+    <div class="card hide" id="gasPinCard">
+      <b>🔐 สิทธิ์และความปลอดภัยของแก๊ส</b>
+      <div class="hint" style="margin-bottom:8px">ปุ่มสลับบัญชี (แก๊ส ↔ แฟน) จะเปิดให้ใช้งานเฉพาะบนเครื่องของแก๊สเท่านั้น เพื่อไม่ให้แฟนกดสลับเป็นแก๊สได้</div>
+      <label>รหัส PIN ยืนยันตัวตนแก๊ส (ค่าเริ่มต้น: 1234)</label>
+      <div style="display:flex;gap:6px">
+        <input id="sGasPin" type="password" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="ตั้งรหัส PIN ใหม่ (เช่น 1234)">
+        <button type="button" class="mini" id="saveGasPinBtn" style="white-space:nowrap;background:var(--soft);color:var(--pri);font-weight:700">บันทึก PIN</button>
+      </div>
+      <div id="gasPinNotice" class="hint" style="margin-top:6px;color:var(--pri)"></div>
+      <button type="button" class="mini" id="revokeGasDevBtn" style="margin-top:12px;background:none;border:1px solid var(--bd);color:var(--exp);font-size:12px;width:100%">⚠️ ล้างสิทธิ์แก๊สออกจากเครื่องนี้ (หากเครื่องนี้คือเครื่องของแฟน)</button>
     </div>
 
     <!-- กองทุน / กระเป๋าเงิน (เพิ่มได้ไม่จำกัด) -->
@@ -516,7 +529,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION = "2.4";
+  var APP_VERSION = "2.6";
   var $ = function(i){ return document.getElementById(i); };
   var TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   var DEFAULT_CATS = {
@@ -542,6 +555,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     funds: {f1:"ของแก๊ส", f2:"ของน้ำ", shop:"ของร้าน"},
     fund: "all",
     privacy: {},
+    gasPin: "1234",
     tx: [],
     logs: [],
     goals: [],
@@ -591,6 +605,48 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   function isPartner(name){
     var n = (name || "").trim().toLowerCase();
     return n === "น้ำ" || n === "nam" || n === "แฟน";
+  }
+
+  // สิทธิ์ของแก๊สและการยืนยันตัวตนเครื่อง (เปิดสลับได้แค่แก๊สเท่านั้น ของแฟนจะไม่มี)
+  function isGasDevice(){
+    var dev = ls("m_gas_dev");
+    if(dev === "1") return true;
+    if(dev === "0") return false;
+    // กรณีที่เคยบันทึกชื่อเป็นแก๊สไว้แล้วบนเครื่องนี้
+    if(isGas(S.name) || isGas(ls("m_name"))){
+      ls("m_gas_dev", "1");
+      return true;
+    }
+    return false;
+  }
+  function checkGasPin(inputPin){
+    var correct = String(S.gasPin || "1234").trim();
+    return String(inputPin || "").trim() === correct;
+  }
+  function promptGasPin(msg){
+    var p = prompt(msg || "🔐 กรุณาใส่รหัส PIN ยืนยันสิทธิ์ของแก๊ส (ค่าเริ่มต้น: 1234):");
+    if(p === null) return false;
+    if(checkGasPin(p)){
+      ls("m_gas_dev", "1");
+      return true;
+    } else {
+      toast("❌ รหัส PIN ไม่ถูกต้อง สิทธิ์ของแก๊สถูกปฏิเสธ");
+      return false;
+    }
+  }
+  function renderGasSecurityUI(){
+    var card = $("gasPinCard");
+    if(!card) return;
+    var isGasDev = isGasDevice();
+    if(isGasDev){
+      card.classList.remove("hide");
+      var notice = $("gasPinNotice");
+      if(notice){
+        notice.textContent = "✓ เครื่องนี้ได้รับสิทธิ์ของแก๊สแล้ว (สามารถใช้ฟังก์ชันสลับบัญชีได้)";
+      }
+    } else {
+      card.classList.add("hide");
+    }
   }
   function getFundOwner(fundId){
     var f = S.fundList.find(function(x){ return x.id === fundId; });
@@ -1494,12 +1550,33 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var key = S.month.getFullYear() + "-" + String(S.month.getMonth() + 1).padStart(2, "0");
     $("monLbl").textContent = TH[S.month.getMonth()] + " " + (S.month.getFullYear() + 543);
 
-    // อัปเดตแถบผู้ใช้งานปัจจุบัน
+    // อัปเดตแถบผู้ใช้งานปัจจุบัน (เปิดสลับได้แค่แก๊สเท่านั้น)
     var uBar = $("userBar");
     if(uBar && S.name){
       uBar.classList.remove("hide");
       $("curUserLbl").textContent = S.name;
-      $("quickSwitchUserBtn").textContent = isGas(S.name) ? "🔄 สลับเป็นแฟน (น้ำ)" : "🔄 สลับเป็นผม (แก๊ส)";
+      $("curUserLbl").style.color = isGas(S.name) ? "var(--pri)" : "var(--acc)";
+      var isGasDev = isGasDevice();
+      var badge = $("curUserBadge");
+      if(badge){
+        badge.textContent = isGasDev ? (isGas(S.name) ? "(เครื่องแก๊ส)" : "(จำลองเป็นแฟน)") : "";
+      }
+      var switchBtn = $("quickSwitchUserBtn");
+      if(switchBtn){
+        if(isGasDev){
+          switchBtn.classList.remove("hide");
+          if(isGas(S.name)){
+            switchBtn.textContent = "🔄 สลับเป็นแฟน (น้ำ)";
+            switchBtn.style.color = "var(--acc)";
+          } else {
+            switchBtn.textContent = "🔄 สลับกลับเป็นผม (แก๊ส)";
+            switchBtn.style.color = "var(--pri)";
+          }
+        } else {
+          // เครื่องแฟน: ซ่อนปุ่มสลับโดยสิ้นเชิง แฟนไม่สามารถกดสลับเป็นแก๊สได้
+          switchBtn.classList.add("hide");
+        }
+      }
     }
 
     // กล่องแจ้งเตือนคำขอดูยอดเงินเด่นชัดด้านบนสุด
@@ -2220,7 +2297,16 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
     col("members").doc(S.name).set({name: S.name, ts: Date.now()}).catch(function(){});
 
-    // 0. Privacy settings (การซ่อนยอด xxxx และการขอสิทธิ์ดูยอด 1 วัน)
+    // 0. Security settings (รหัส PIN สิทธิ์ของแก๊ส)
+    S.unsub.push(col("settings").doc("security").onSnapshot(function(d){
+      if(d.exists){
+        var sec = d.data() || {};
+        if(sec.gasPin) S.gasPin = String(sec.gasPin);
+      }
+      renderGasSecurityUI();
+    }, function(){}));
+
+    // 1. Privacy settings (การซ่อนยอด xxxx และการขอสิทธิ์ดูยอด 1 วัน)
     var lastPendingCount = -1;
     S.unsub.push(col("settings").doc("privacy").onSnapshot(function(d){
       S.privacy = d.exists ? d.data() : {};
@@ -2312,10 +2398,63 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     render(); show("home");
   }
 
-  $("pickGasBtn").onclick = function(){ $("sName").value = "แก๊ส"; refreshNoti(); };
-  $("pickNamBtn").onclick = function(){ $("sName").value = "น้ำ"; refreshNoti(); };
+  $("pickGasBtn").onclick = function(){
+    if(!isGasDevice()){
+      if(!promptGasPin("🔐 กรุณาใส่รหัส PIN เพื่อเปิดใช้สิทธิ์ของแก๊สบนเครื่องนี้ (ค่าเริ่มต้น: 1234):")){
+        return;
+      }
+    }
+    $("sName").value = "แก๊ส";
+    renderGasSecurityUI();
+    refreshNoti();
+  };
+
+  $("pickNamBtn").onclick = function(){
+    $("sName").value = "น้ำ";
+    renderGasSecurityUI();
+    refreshNoti();
+  };
+
+  $("saveGasPinBtn").onclick = async function(){
+    var newPin = ($("sGasPin").value || "").trim();
+    if(!/^\d{4,6}$/.test(newPin)){
+      toast("⚠️ กรุณาตั้งรหัส PIN เป็นตัวเลข 4-6 หลัก");
+      return;
+    }
+    try {
+      await col("settings").doc("security").set({
+        gasPin: newPin,
+        updatedAt: Date.now(),
+        updatedBy: S.name || "แก๊ส"
+      }, { merge: true });
+      S.gasPin = newPin;
+      $("sGasPin").value = "";
+      toast("✓ บันทึกรหัส PIN ใหม่ของแก๊สเรียบร้อยแล้ว");
+      renderGasSecurityUI();
+    } catch(e){
+      showErr("บันทึก PIN ไม่สำเร็จ: " + (e && e.message || e));
+    }
+  };
+
+  $("revokeGasDevBtn").onclick = function(){
+    if(confirm("ต้องการล้างสิทธิ์แก๊สออกจากเครื่องนี้ใช่หรือไม่?\n(เครื่องนี้จะกลายเป็นเครื่องของแฟน และไม่มีปุ่มสลับบัญชีอีกต่อไป)")){
+      ls("m_gas_dev", "0");
+      if(isGas(S.name)){
+        S.name = "น้ำ";
+        ls("m_name", "น้ำ");
+        $("sName").value = "น้ำ";
+      }
+      renderGasSecurityUI();
+      toast("✓ ล้างสิทธิ์แก๊สออกจากเครื่องนี้แล้ว (ไม่มีฟังก์ชันสลับของแฟน)");
+      connect();
+    }
+  };
 
   $("quickSwitchUserBtn").onclick = function(){
+    if(!isGasDevice()){
+      toast("⚠️ ฟังก์ชันนี้สงวนสิทธิ์เฉพาะของแก๊สเท่านั้น (ของแฟนจะไม่มีสิทธิ์)");
+      return;
+    }
     var nextUser = isGas(S.name) ? "น้ำ" : "แก๊ส";
     S.name = nextUser;
     ls("m_name", nextUser);
@@ -2328,13 +2467,20 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var n = $("sName").value.trim(), r = $("sRoom").value.trim().replace(/[\/\s]/g,"");
     if(!n){ $("sName").focus(); return; }
     if(r.length < 8){ showErr("รหัสห้องต้องยาวอย่างน้อย 8 ตัวอักษร (ห้ามมีเว้นวรรคหรือ /)"); return; }
+    if(isGas(n) && !isGasDevice()){
+      if(!promptGasPin("🔐 คุณกำลังเข้าใช้งานในชื่อแก๊ส กรุณาใส่รหัส PIN ยืนยันสิทธิ์:")){
+        return;
+      }
+    } else if(!isGas(n) && ls("m_gas_dev") !== "1"){
+      ls("m_gas_dev", "0");
+    }
     clearErr(); S.name = n; S.room = r; ls("m_name", n); ls("m_room", r); connect();
   };
 
   $("cfgBtn").onclick = function(){
     $("sName").value = S.name; $("sRoom").value = S.room;
     S.unsub.forEach(function(u){ u(); }); S.unsub = [];
-    show("setup"); refreshNoti(); renderCategoryTags(); renderFundEditor();
+    show("setup"); refreshNoti(); renderCategoryTags(); renderFundEditor(); renderGasSecurityUI();
   };
 
   // ตรวจสอบการนับถอยหลัง / หมดอายุของสิทธิ์ดูยอด 1 วันแบบอัตโนมัติ
@@ -2403,7 +2549,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     } else {
       firebase.initializeApp(cfg); S.db = firebase.firestore();
       S.name = ls("m_name") || ""; S.room = ls("m_room") || "";
-      if(S.name && S.room) connect(); else { show("setup"); refreshNoti(); }
+      if(S.name && S.room) connect(); else { show("setup"); refreshNoti(); renderGasSecurityUI(); }
     }
   } catch(e){
     showErr("เริ่มระบบไม่สำเร็จ: " + (e && e.message || e)); show("setup");
