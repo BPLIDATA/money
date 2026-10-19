@@ -72,12 +72,22 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .fcard .fb{font-size:24px;font-weight:800;white-space:nowrap;text-align:right}
 .fcard .fb small{display:block;font-size:11px;font-weight:400;color:var(--mut)}
 .ftot{font-size:13px;color:var(--mut);text-align:center}
+.ver{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--pri);border:0;vertical-align:middle;margin-left:4px}
+.fcard .fl{flex:1;min-width:0}
+.bar{height:6px;border-radius:99px;background:var(--bd);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--pri);border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.fcard.top{border-color:var(--pri);background:linear-gradient(135deg,var(--soft),var(--card))}
+.fcard.top .fb{font-size:32px}
+.fcard.top .fn{font-size:17px}
+.fcard.on{box-shadow:0 0 0 2px var(--pri)}
+.pop{animation:pop .5s ease}
+@keyframes pop{from{transform:scale(.95);opacity:.4}to{transform:none;opacity:1}}
 .mini{padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="row"><h1>💰 รายรับรายจ่ายของเรา</h1><button class="link" id="cfgBtn">⚙︎ ตั้งค่า</button></div>
+  <div class="row"><h1>💰 รายรับรายจ่ายของเรา <button class="ver" id="verHead" title="แตะเพื่อบังคับอัปเดต"></button></h1><button class="link" id="cfgBtn">⚙︎ ตั้งค่า</button></div>
   <div id="err" class="card hide"></div>
 
   <section id="p-setup" class="hide">
@@ -144,7 +154,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION="1.4";
+  var APP_VERSION="1.5";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -248,32 +258,58 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   $("nCopy").onclick=function(){var v=$("nTopic").value;if(!v)return;try{navigator.clipboard.writeText(v);this.textContent="คัดลอกแล้ว"}catch(e){$("nTopic").select()}};
   $("sName").oninput=refreshNoti;$("sRoom").oninput=refreshNoti;
 
+  function money(v){return(v<0?"-":"")+fmt(Math.abs(v))+" ฿"}
+  function countUp(node,from,to){
+    var t0=null,dur=800;
+    function f(ts){
+      if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,3);
+      node.textContent=money(p<1?Math.round((from+(to-from)*e)*100)/100:to);
+      if(p<1)requestAnimationFrame(f);
+    }
+    node.textContent=money(from);requestAnimationFrame(f);
+  }
   function render(){
     var key=S.month.getFullYear()+"-"+String(S.month.getMonth()+1).padStart(2,"0");
     $("monLbl").textContent=TH[S.month.getMonth()]+" "+(S.month.getFullYear()+543);
     var items=S.tx.filter(function(t){return(t.date||"").slice(0,7)===key&&(S.fund==="all"||fundOf(t)===S.fund)});
     var fc=$("fundCards");fc.textContent="";
-    var allTot=0;
-    FK.forEach(function(k){
+    var rows=FK.map(function(k){
       var tot=0,mi=0,me=0;
       S.tx.forEach(function(t){
         if(fundOf(t)!==k)return;
         tot+=(t.type==="inc"?1:-1)*t.amount;
         if((t.date||"").slice(0,7)===key){if(t.type==="inc")mi+=t.amount;else me+=t.amount}
       });
-      allTot+=tot;
-      var c=el("div","fcard"+(S.fund===k?" on":"")),l=el("div");
-      l.appendChild(el("div","fn",fname(k)));
+      return{k:k,tot:tot,mi:mi,me:me};
+    });
+    rows.sort(function(a,b){return b.tot-a.tot});
+    var allTot=rows.reduce(function(s,r){return s+r.tot},0);
+    var maxTot=Math.max.apply(null,rows.map(function(r){return r.tot}));
+    var order=rows.map(function(r){return r.k}).join(",");
+    var reorder=S.order&&S.order!==order;S.order=order;
+    var medals=["🥇","🥈","🥉"];
+    S.shown=S.shown||{};S.pct=S.pct||{};
+    rows.forEach(function(r,i){
+      var c=el("div","fcard"+(i===0?" top":"")+(S.fund===r.k?" on":"")+(reorder?" pop":"")),l=el("div","fl");
+      l.appendChild(el("div","fn",medals[i]+" "+fname(r.k)));
       var sm=el("div","fs");sm.appendChild(document.createTextNode("เดือนนี้ "));
-      sm.appendChild(el("span","inc","+"+fmt(mi)));sm.appendChild(document.createTextNode("  "));sm.appendChild(el("span","exp","-"+fmt(me)));
+      sm.appendChild(el("span","inc","+"+fmt(r.mi)));sm.appendChild(document.createTextNode("  "));sm.appendChild(el("span","exp","-"+fmt(r.me)));
       l.appendChild(sm);
-      var r=el("div","fb "+(tot<0?"exp":"inc"),(tot<0?"-":"")+fmt(Math.abs(tot))+" ฿");r.appendChild(el("small",null,"คงเหลือ"));
-      c.appendChild(l);c.appendChild(r);
-      c.onclick=function(){S.fund=S.fund===k?"all":k;if(S.fund!=="all")$("fFund").value=k;render()};
+      var bar=el("div","bar"),fill=document.createElement("i");bar.appendChild(fill);l.appendChild(bar);
+      var pct=(maxTot>0&&r.tot>0)?Math.round(r.tot/maxTot*100):0;
+      fill.style.width=(S.pct[r.k]||0)+"%";
+      requestAnimationFrame(function(){requestAnimationFrame(function(){fill.style.width=pct+"%"})});
+      S.pct[r.k]=pct;
+      var rt=el("div","fb "+(r.tot<0?"exp":"inc")),num=el("span");
+      rt.appendChild(num);rt.appendChild(el("small",null,"คงเหลือ"));
+      var from=S.shown[r.k]===undefined?0:S.shown[r.k];S.shown[r.k]=r.tot;
+      if(from===r.tot)num.textContent=money(r.tot);else countUp(num,from,r.tot);
+      c.appendChild(l);c.appendChild(rt);
+      c.onclick=function(){S.fund=S.fund===r.k?"all":r.k;if(S.fund!=="all")$("fFund").value=r.k;render()};
       fc.appendChild(c);
     });
     var tt=el("div","ftot");tt.appendChild(document.createTextNode("รวมทุกกองทุน "));
-    tt.appendChild(el("b",allTot<0?"exp":"inc",(allTot<0?"-":"")+fmt(Math.abs(allTot))+" ฿"));
+    tt.appendChild(el("b",allTot<0?"exp":"inc",money(allTot)));
     tt.appendChild(document.createTextNode(" · แตะกองทุนเพื่อดูเฉพาะรายการของกองทุนนั้น (แตะซ้ำเพื่อดูทั้งหมด)"));
     fc.appendChild(tt);
     var list=$("list");list.textContent="";
@@ -345,6 +381,9 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   fillFunds();
   // ตรวจเวอร์ชันใหม่
   $("verTxt").textContent="เวอร์ชันแอป "+APP_VERSION;
+  $("verHead").textContent="v"+APP_VERSION;
+  $("verHead").onclick=function(){this.textContent="กำลังอัปเดต…";doUpdate()};
+  try{if(location.search)history.replaceState(null,"",location.pathname)}catch(e){}
   async function doUpdate(){
     try{
       if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
@@ -354,7 +393,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   }
   async function checkUpdate(){
     try{
-      var r=await fetch("index.html?_="+Date.now(),{cache:"no-store"});var t=await r.text();
+      var r=await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"});var t=await r.text();
       var m=t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
       if(!m||m[1]===APP_VERSION){$("upd").classList.add("hide");return}
       var tried=null;try{tried=sessionStorage.getItem("m_try")}catch(e){}
