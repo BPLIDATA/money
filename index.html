@@ -56,6 +56,8 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
 .toast{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);max-width:536px;margin:0 auto;background:var(--pri);color:#fff;padding:12px 14px;border-radius:12px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);font-weight:600}
 input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .cb{display:flex;align-items:center;font-size:15px;color:var(--tx);margin:10px 0 6px}
+#upd{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 66px);max-width:536px;margin:0 auto;background:var(--exp);color:#fff;padding:12px 14px;border-radius:12px;z-index:60;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+#upd button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;background:#fff;color:#7c2d12}
 .mini{padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px}
 </style>
 </head>
@@ -80,6 +82,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <label class="cb"><input type="checkbox" id="nNtfy">เปิดใช้การแจ้งเตือนผ่าน ntfy</label>
       <label>topic ของคุณ (ใช้ใน ntfy)</label>
       <div style="display:flex;gap:6px"><input id="nTopic" readonly placeholder="บันทึกชื่อและรหัสห้องก่อน"><button class="mini" id="nCopy" style="height:44px">คัดลอก</button></div>
+      <div class="hint" id="verTxt"></div>
       <div class="hint">ข้อความแจ้งเตือน (ชื่อคนเพิ่ม ประเภท หมวด จำนวนเงิน) จะผ่านเซิร์ฟเวอร์ ntfy.sh ของบุคคลที่สาม ไม่ต้องการก็ไม่ต้องติ๊ก</div>
     </div>
   </section>
@@ -112,6 +115,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 </div>
 
 <div id="toast" class="toast hide"></div>
+<div id="upd" class="hide"><span>🆕 มีเวอร์ชันใหม่ของแอป</span><button id="updBtn">อัปเดตเลย</button></div>
 <nav class="tabs hide" id="tabs">
   <button data-t="home" class="on">📋 รายการ</button>
   <button data-t="add">➕ เพิ่ม</button>
@@ -123,6 +127,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
+  var APP_VERSION="1.1";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -281,6 +286,23 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     $("sName").value=S.name;$("sRoom").value=S.room;
     S.unsub.forEach(function(u){u()});S.unsub=[];show("setup");refreshNoti();
   };
+
+  // ตรวจเวอร์ชันใหม่
+  $("verTxt").textContent="เวอร์ชันแอป "+APP_VERSION;
+  async function checkUpdate(){
+    try{
+      var r=await fetch("index.html?_="+Date.now(),{cache:"no-store"});var t=await r.text();
+      var m=t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+      if(m&&m[1]!==APP_VERSION)$("upd").classList.remove("hide");
+    }catch(e){}
+  }
+  $("updBtn").onclick=async function(){
+    try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
+      if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(x){return x.update()}))}}catch(e){}
+    location.reload();
+  };
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)checkUpdate()});
+  setInterval(checkUpdate,300000);setTimeout(checkUpdate,3000);
 
   // boot
   try{
