@@ -132,7 +132,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 </div>
 
 <div id="toast" class="toast hide"></div>
-<div id="upd" class="hide"><span>🆕 มีเวอร์ชันใหม่ของแอป</span><button id="updBtn">อัปเดตเลย</button></div>
+<div id="upd" class="hide"><span id="updTxt">🆕 มีเวอร์ชันใหม่ของแอป</span><button id="updBtn">อัปเดตเลย</button></div>
 <nav class="tabs hide" id="tabs">
   <button data-t="home" class="on">📋 รายการ</button>
   <button data-t="add">➕ เพิ่ม</button>
@@ -144,7 +144,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION="1.3";
+  var APP_VERSION="1.4";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -345,21 +345,31 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   fillFunds();
   // ตรวจเวอร์ชันใหม่
   $("verTxt").textContent="เวอร์ชันแอป "+APP_VERSION;
-  async function checkUpdate(){
-    try{
-      var r=await fetch("index.html?_="+Date.now(),{cache:"no-store"});var t=await r.text();
-      var m=t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
-      if(m&&m[1]!==APP_VERSION)$("upd").classList.remove("hide");
-    }catch(e){}
-  }
-  $("updBtn").onclick=async function(){
-    var btn=this;btn.disabled=true;btn.textContent="กำลังอัปเดต…";
+  async function doUpdate(){
     try{
       if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
       if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(x){return x.unregister()}))}
     }catch(e){}
     location.replace(location.pathname+"?v="+Date.now());
-  };
+  }
+  async function checkUpdate(){
+    try{
+      var r=await fetch("index.html?_="+Date.now(),{cache:"no-store"});var t=await r.text();
+      var m=t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+      if(!m||m[1]===APP_VERSION){$("upd").classList.add("hide");return}
+      var tried=null;try{tried=sessionStorage.getItem("m_try")}catch(e){}
+      if(tried!==m[1]){
+        // ลองอัปเดตอัตโนมัติ 1 ครั้งต่อเวอร์ชัน
+        try{sessionStorage.setItem("m_try",m[1])}catch(e){}
+        $("updTxt").textContent="กำลังอัปเดตเป็นเวอร์ชัน "+m[1]+"…";$("upd").classList.remove("hide");
+        doUpdate();return;
+      }
+      // อัปเดตอัตโนมัติแล้วแต่ยังได้ไฟล์เก่า
+      $("updTxt").textContent="ยังโหลดเวอร์ชันเก่า ("+APP_VERSION+") อยู่ ใหม่คือ "+m[1]+" — รอสัก 1-2 นาทีแล้วกดลองอีกครั้ง หรือปิดแอปแล้วเปิดใหม่";
+      $("updBtn").textContent="ลองอีกครั้ง";$("upd").classList.remove("hide");
+    }catch(e){}
+  }
+  $("updBtn").onclick=function(){this.disabled=true;this.textContent="กำลังอัปเดต…";doUpdate()};
   document.addEventListener("visibilitychange",function(){if(!document.hidden)checkUpdate()});
   setInterval(checkUpdate,300000);setTimeout(checkUpdate,3000);
 
