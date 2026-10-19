@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="รายรับรายจ่าย">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>รายรับรายจ่ายของเรา</title>
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--tx:#1b2422;--mut:#6b7a76;--bd:#e2e8e6;--pri:#0f766e;--inc:#15803d;--exp:#c2410c;--soft:#e6f2f0}
+@media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2421;--tx:#e8eeec;--mut:#92a29d;--bd:#2b3733;--pri:#2dd4bf;--inc:#4ade80;--exp:#fb923c;--soft:#1f2f2c}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Sarabun","Noto Sans Thai",sans-serif;font-size:16px;line-height:1.4;padding-top:env(safe-area-inset-top,0px)}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 100px}
+h1{font-size:19px;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.mon{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mon button{width:38px;height:38px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px}
+.mon b{font-size:17px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sum div{background:var(--soft);border-radius:10px;padding:10px}
+.sum small{color:var(--mut);display:block}.sum .big{grid-column:span 2;text-align:center}
+.sum .big b{font-size:26px}
+.inc{color:var(--inc)}.exp{color:var(--exp)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.seg button{padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:15px}
+.seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:16px;margin-bottom:8px}
+label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
+.go{width:100%;padding:13px;border-radius:12px;border:0;background:var(--pri);color:#fff;font-size:16px;font-weight:600}
+.go:disabled{opacity:.5}
+.link{background:none;border:0;color:var(--mut);font-size:13px;text-decoration:underline;padding:6px 0}
+.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+.item:last-child{border:0}.item .m{flex:1;min-width:0}
+.item .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .s{font-size:13px;color:var(--mut)}
+.amt{font-weight:700;white-space:nowrap}
+.del{border:1px solid var(--bd);background:var(--card);color:var(--mut);border-radius:8px;padding:6px 9px;font-size:13px}
+.del.ask{background:var(--exp);color:#fff;border-color:var(--exp)}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;padding:14px 4px;border:0;background:none;color:var(--mut);font-size:15px}
+.tabs button.on{color:var(--pri);font-weight:700}
+.emp{text-align:center;color:var(--mut);padding:18px 0}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:99px;background:var(--soft);color:var(--pri);margin-right:4px}
+.tag.d{background:#fee2e2;color:#b91c1c}
+.hint{font-size:13px;color:var(--mut);margin-top:6px}
+.hide{display:none}
+#err{border-color:var(--exp);color:var(--exp)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row"><h1>💰 รายรับรายจ่ายของเรา</h1><button class="link" id="cfgBtn">⚙︎ ตั้งค่า</button></div>
+  <div id="err" class="card hide"></div>
+
+  <section id="p-setup" class="hide">
+    <div class="card">
+      <b>ตั้งค่าครั้งแรก</b>
+      <div class="hint" style="margin-bottom:10px">ใส่ชื่อของคุณ (สองคนต้องใช้ชื่อไม่ซ้ำกัน) และ “รหัสห้อง” ที่ทั้งคู่ใช้ตรงกัน ใครรู้รหัสนี้จะเข้าดูข้อมูลได้ ควรตั้งยาว ๆ เดาไม่ได้</div>
+      <label>ชื่อของคุณ</label><input id="sName" maxlength="20" placeholder="เช่น แบงค์">
+      <label>รหัสห้อง (อย่างน้อย 8 ตัวอักษร)</label><input id="sRoom" maxlength="40" placeholder="เช่น mooban-8842-kaew" autocapitalize="off" autocorrect="off">
+      <button class="go" id="sGo">เริ่มใช้งาน</button>
+    </div>
+  </section>
+
+  <section id="p-home" class="hide">
+    <div class="mon"><button id="prev">‹</button><b id="monLbl"></b><button id="next">›</button></div>
+    <div class="card sum">
+      <div class="big"><small>คงเหลือ</small><b id="sBal">0</b></div>
+      <div><small>รายรับ</small><b class="inc" id="sInc">0</b></div>
+      <div><small>รายจ่าย</small><b class="exp" id="sExp">0</b></div>
+    </div>
+    <div class="card"><div id="list"></div></div>
+  </section>
+
+  <section id="p-add" class="hide">
+    <div class="card">
+      <div class="seg"><button id="bExp" class="on">รายจ่าย</button><button id="bInc">รายรับ</button></div>
+      <input id="fAmt" type="number" inputmode="decimal" placeholder="จำนวนเงิน (บาท)">
+      <select id="fCat"></select>
+      <input id="fNote" type="text" placeholder="โน้ต (ไม่บังคับ)" maxlength="80">
+      <input id="fDate" type="date">
+      <button class="go" id="fGo">บันทึก</button>
+      <div class="hint">ทุกรายการจะบันทึกว่าใครเป็นคนเพิ่ม และเห็นพร้อมกันทั้งสองเครื่อง</div>
+    </div>
+  </section>
+
+  <section id="p-log" class="hide">
+    <div class="card"><div id="logList"></div></div>
+  </section>
+</div>
+
+<nav class="tabs hide" id="tabs">
+  <button data-t="home" class="on">📋 รายการ</button>
+  <button data-t="add">➕ เพิ่ม</button>
+  <button data-t="log">🕘 ประวัติ</button>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
+  var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  var S={tx:[],logs:[],name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
+  S.month.setDate(1);
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+  function fmt(n){return Number(n).toLocaleString("th-TH",{maximumFractionDigits:2})}
+  function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+  function fdate(s){var p=(s||"").split("-");return p.length===3?(+p[2])+" "+TH[+p[1]-1]+" "+(+p[0]+543):s}
+  function who(n){return n===S.name?"คุณ":(n||"ไม่ทราบ")}
+  function showErr(m){var e=$("err");e.textContent=m;e.classList.remove("hide")}
+  function clearErr(){$("err").classList.add("hide")}
+
+  function show(page){
+    ["setup","home","add","log"].forEach(function(p){$("p-"+p).classList.toggle("hide",p!==page)});
+    $("tabs").classList.toggle("hide",page==="setup");
+    document.querySelectorAll(".tabs button").forEach(function(b){b.classList.toggle("on",b.dataset.t===page)});
+  }
+  document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){show(b.dataset.t)}});
+
+  function fillCats(){var s=$("fCat");s.textContent="";CATS[S.type].forEach(function(c){var o=el("option",null,c);o.value=c;s.appendChild(o)})}
+  function setType(t){S.type=t;$("bExp").classList.toggle("on",t==="exp");$("bInc").classList.toggle("on",t==="inc");fillCats()}
+  $("bExp").onclick=function(){setType("exp")};$("bInc").onclick=function(){setType("inc")};
+  $("fDate").value=ymd(new Date());fillCats();
+
+  function col(n){return S.db.collection("rooms").doc(S.room).collection(n)}
+
+  $("fGo").onclick=async function(){
+    var amt=parseFloat($("fAmt").value);
+    if(!(amt>0)){$("fAmt").focus();return}
+    var btn=$("fGo");btn.disabled=true;clearErr();
+    var body={type:S.type,amount:amt,category:$("fCat").value,note:$("fNote").value.trim(),date:$("fDate").value||ymd(new Date()),by:S.name,ts:Date.now()};
+    try{
+      var ref=col("tx").doc();
+      await ref.set(body);
+      await col("logs").add({action:"add",txId:ref.id,snap:{type:body.type,amount:body.amount,category:body.category,note:body.note,date:body.date},by:S.name,ts:Date.now()});
+      $("fAmt").value="";$("fNote").value="";show("home");
+    }catch(e){showErr("บันทึกไม่สำเร็จ: "+(e&&e.message||e))}
+    btn.disabled=false;
+  };
+
+  async function del(t){
+    try{
+      await col("tx").doc(t.id).delete();
+      await col("logs").add({action:"delete",txId:t.id,snap:{type:t.type,amount:t.amount,category:t.category,note:t.note,date:t.date},origBy:t.by,by:S.name,ts:Date.now()});
+    }catch(e){showErr("ลบไม่สำเร็จ: "+(e&&e.message||e))}
+  }
+
+  function render(){
+    var key=S.month.getFullYear()+"-"+String(S.month.getMonth()+1).padStart(2,"0");
+    $("monLbl").textContent=TH[S.month.getMonth()]+" "+(S.month.getFullYear()+543);
+    var items=S.tx.filter(function(t){return(t.date||"").slice(0,7)===key});
+    var inc=0,exp=0;items.forEach(function(t){if(t.type==="inc")inc+=t.amount;else exp+=t.amount});
+    $("sInc").textContent=fmt(inc);$("sExp").textContent=fmt(exp);
+    var bal=inc-exp,b=$("sBal");b.textContent=(bal<0?"-":"")+fmt(Math.abs(bal));b.className=bal<0?"exp":"inc";
+    var list=$("list");list.textContent="";
+    if(!items.length)list.appendChild(el("div","emp","ยังไม่มีรายการในเดือนนี้"));
+    items.forEach(function(t){
+      var r=el("div","item"),m=el("div","m");
+      m.appendChild(el("div","t",t.category+(t.note?" · "+t.note:"")));
+      var s=el("div","s");s.appendChild(el("span","tag",who(t.by)));s.appendChild(document.createTextNode(fdate(t.date)));m.appendChild(s);
+      var a=el("div","amt "+(t.type==="inc"?"inc":"exp"),(t.type==="inc"?"+":"-")+fmt(t.amount));
+      var d=el("button","del"+(S.armed===t.id?" ask":""),S.armed===t.id?"ยืนยันลบ?":"ลบ");
+      d.onclick=function(){
+        if(S.armed===t.id){S.armed=null;del(t)}
+        else{S.armed=t.id;render();setTimeout(function(){if(S.armed===t.id){S.armed=null;render()}},3000)}
+      };
+      r.appendChild(m);r.appendChild(a);r.appendChild(d);list.appendChild(r);
+    });
+    var ll=$("logList");ll.textContent="";
+    if(!S.logs.length)ll.appendChild(el("div","emp","ยังไม่มีประวัติ"));
+    S.logs.forEach(function(g){
+      var r=el("div","item"),m=el("div","m"),sn=g.snap||{};
+      var head=el("div","t");head.appendChild(el("span","tag"+(g.action==="delete"?" d":""),g.action==="delete"?"ลบ":"เพิ่ม"));
+      head.appendChild(document.createTextNode(who(g.by)+(g.action==="delete"?" ลบ ":" เพิ่ม ")+(sn.category||"")+(sn.note?" · "+sn.note:"")));
+      m.appendChild(head);
+      var extra=g.action==="delete"&&g.origBy&&g.origBy!==g.by?" (ผู้เพิ่มเดิม: "+who(g.origBy)+")":"";
+      m.appendChild(el("div","s",new Date(g.ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+extra));
+      r.appendChild(m);r.appendChild(el("div","amt "+(sn.type==="inc"?"inc":"exp"),(sn.type==="inc"?"+":"-")+fmt(sn.amount||0)));ll.appendChild(r);
+    });
+  }
+  $("prev").onclick=function(){S.month.setMonth(S.month.getMonth()-1);render()};
+  $("next").onclick=function(){S.month.setMonth(S.month.getMonth()+1);render()};
+
+  function connect(){
+    S.unsub.forEach(function(u){u()});S.unsub=[];S.tx=[];S.logs=[];
+    S.unsub.push(col("tx").onSnapshot(function(sn){
+      S.tx=sn.docs.map(function(d){var o=d.data();o.id=d.id;return o}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||b.ts-a.ts});
+      render();
+    },function(e){showErr("อ่านข้อมูลไม่ได้ (เช็ก Firebase rules): "+e.message)}));
+    S.unsub.push(col("logs").orderBy("ts","desc").limit(200).onSnapshot(function(sn){
+      S.logs=sn.docs.map(function(d){return d.data()});render();
+    },function(e){}));
+    render();show("home");
+  }
+
+  $("sGo").onclick=function(){
+    var n=$("sName").value.trim(),r=$("sRoom").value.trim().replace(/[\/\s]/g,"");
+    if(!n){$("sName").focus();return}
+    if(r.length<8){showErr("รหัสห้องต้องยาวอย่างน้อย 8 ตัวอักษร (ห้ามมีเว้นวรรคหรือ /)");return}
+    clearErr();S.name=n;S.room=r;ls("m_name",n);ls("m_room",r);connect();
+  };
+  $("cfgBtn").onclick=function(){
+    $("sName").value=S.name;$("sRoom").value=S.room;
+    S.unsub.forEach(function(u){u()});S.unsub=[];show("setup");
+  };
+
+  // boot
+  try{
+    var cfg=window.FIREBASE_CONFIG||{};
+    if(!cfg.apiKey||cfg.apiKey.indexOf("ใส่ค่า")===0){showErr("ยังไม่ได้ใส่ค่า Firebase ในไฟล์ config.js");show("setup")}
+    else{
+      firebase.initializeApp(cfg);S.db=firebase.firestore();
+      S.name=ls("m_name")||"";S.room=ls("m_room")||"";
+      if(S.name&&S.room)connect();else show("setup");
+    }
+  }catch(e){showErr("เริ่มระบบไม่สำเร็จ: "+(e&&e.message||e));show("setup")}
+
+  if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
+})();
+</script>
+</body>
+</html>
