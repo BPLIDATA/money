@@ -58,6 +58,12 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .cb{display:flex;align-items:center;font-size:15px;color:var(--tx);margin:10px 0 6px}
 #upd{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 66px);max-width:536px;margin:0 auto;background:var(--exp);color:#fff;padding:12px 14px;border-radius:12px;z-index:60;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 #upd button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;background:#fff;color:#7c2d12}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
+.chips button{flex:0 0 auto;padding:8px 14px;border-radius:99px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px;white-space:nowrap}
+.chips button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.fc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.fc div{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 6px;text-align:center;font-size:12px;color:var(--mut)}
+.fc b{display:block;font-size:15px;margin-top:2px}
 .mini{padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px}
 </style>
 </head>
@@ -75,6 +81,12 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <button class="go" id="sGo">เริ่มใช้งาน</button>
     </div>
     <div class="card">
+      <b>🏦 ชื่อกองทุน (ทั้งสองคนเห็นชื่อเดียวกัน)</b>
+      <div class="hint" style="margin-bottom:8px">ตั้งชื่อเองได้ เช่น “ของแบงค์”, “ของแฟน”, “ของร้าน” (ใช้ได้หลังเริ่มใช้งานแล้ว)</div>
+      <input id="fn1" maxlength="20" placeholder="กองทุนที่ 1"><input id="fn2" maxlength="20" placeholder="กองทุนที่ 2"><input id="fn3" maxlength="20" placeholder="ร้าน">
+      <button class="mini" id="fnSave">บันทึกชื่อกองทุน</button>
+    </div>
+    <div class="card">
       <b>🔔 การแจ้งเตือนเมื่ออีกคนเพิ่ม/ลบรายการ</b>
       <div class="hint"><b>แบบที่ 1: ในแอป</b> เด้งแจ้งเตือนทันทีที่อีกคนเพิ่ม/ลบ ขณะเปิดแอปอยู่ และมีเลขแดงที่แท็บ “ประวัติ” เมื่อมีรายการใหม่ที่ยังไม่ได้ดู</div>
       <button class="mini" id="nBtn" style="margin-top:8px">เปิดแจ้งเตือนบนเครื่องนี้</button>
@@ -88,18 +100,21 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   </section>
 
   <section id="p-home" class="hide">
+    <div class="chips" id="fundBar"></div>
     <div class="mon"><button id="prev">‹</button><b id="monLbl"></b><button id="next">›</button></div>
     <div class="card sum">
       <div class="big"><small>คงเหลือ</small><b id="sBal">0</b></div>
       <div><small>รายรับ</small><b class="inc" id="sInc">0</b></div>
       <div><small>รายจ่าย</small><b class="exp" id="sExp">0</b></div>
     </div>
+    <div class="fc" id="fundCards"></div>
     <div class="card"><div id="list"></div></div>
   </section>
 
   <section id="p-add" class="hide">
     <div class="card">
       <div class="seg"><button id="bExp" class="on">รายจ่าย</button><button id="bInc">รายรับ</button></div>
+      <label>กองทุน</label><select id="fFund"></select>
       <input id="fAmt" type="number" inputmode="decimal" placeholder="จำนวนเงิน (บาท)">
       <select id="fCat"></select>
       <input id="fNote" type="text" placeholder="โน้ต (ไม่บังคับ)" maxlength="80">
@@ -127,11 +142,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION="1.1";
+  var APP_VERSION="1.2";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-  var S={tx:[],logs:[],members:[],logsReady:false,name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
+  var S={funds:{f1:"กองทุนที่ 1",f2:"กองทุนที่ 2",shop:"ร้าน"},fund:"all",tx:[],logs:[],members:[],logsReady:false,name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
   S.month.setDate(1);
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
   function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -161,11 +176,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var amt=parseFloat($("fAmt").value);
     if(!(amt>0)){$("fAmt").focus();return}
     var btn=$("fGo");btn.disabled=true;clearErr();
-    var body={type:S.type,amount:amt,category:$("fCat").value,note:$("fNote").value.trim(),date:$("fDate").value||ymd(new Date()),by:S.name,ts:Date.now()};
+    ls("m_lastfund",$("fFund").value);var body={fund:$("fFund").value,type:S.type,amount:amt,category:$("fCat").value,note:$("fNote").value.trim(),date:$("fDate").value||ymd(new Date()),by:S.name,ts:Date.now()};
     try{
       var ref=col("tx").doc();
       await ref.set(body);
-      await col("logs").add({action:"add",txId:ref.id,snap:{type:body.type,amount:body.amount,category:body.category,note:body.note,date:body.date},by:S.name,ts:Date.now()});
+      await col("logs").add({action:"add",txId:ref.id,snap:{fund:body.fund,type:body.type,amount:body.amount,category:body.category,note:body.note,date:body.date},by:S.name,ts:Date.now()});
       pushOthers(desc({by:S.name,action:"add",snap:body}));
       $("fAmt").value="";$("fNote").value="";show("home");
     }catch(e){showErr("บันทึกไม่สำเร็จ: "+(e&&e.message||e))}
@@ -175,12 +190,31 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   async function del(t){
     try{
       await col("tx").doc(t.id).delete();
-      await col("logs").add({action:"delete",txId:t.id,snap:{type:t.type,amount:t.amount,category:t.category,note:t.note,date:t.date},origBy:t.by,by:S.name,ts:Date.now()});
+      await col("logs").add({action:"delete",txId:t.id,snap:{fund:fundOf(t),type:t.type,amount:t.amount,category:t.category,note:t.note,date:t.date},origBy:t.by,by:S.name,ts:Date.now()});
       pushOthers(desc({by:S.name,action:"delete",snap:t}));
     }catch(e){showErr("ลบไม่สำเร็จ: "+(e&&e.message||e))}
   }
 
-  function desc(g){var sn=g.snap||{};return g.by+(g.action==="delete"?" ลบ":" เพิ่ม")+(sn.type==="inc"?"รายรับ ":"รายจ่าย ")+(sn.category||"")+" "+fmt(sn.amount||0)+" บาท"}
+  var FK=["f1","f2","shop"];
+  function fname(k){return S.funds[k||"f1"]||"กองทุน"}
+  function fundOf(t){return t.fund||"f1"}
+  function fillFunds(){
+    var cur=$("fFund").value||(S.fund!=="all"?S.fund:ls("m_lastfund"))||"f1";
+    var s=$("fFund");s.textContent="";FK.forEach(function(k){var o=el("option",null,fname(k));o.value=k;s.appendChild(o)});s.value=cur;
+    var bar=$("fundBar");bar.textContent="";
+    [["all","ทั้งหมด"]].concat(FK.map(function(k){return[k,fname(k)]})).forEach(function(p){
+      var b=el("button",S.fund===p[0]?"on":"",p[1]);
+      b.onclick=function(){S.fund=p[0];if(p[0]!=="all")$("fFund").value=p[0];fillFunds();render()};
+      bar.appendChild(b);
+    });
+    [["fn1","f1"],["fn2","f2"],["fn3","shop"]].forEach(function(p){var i=$(p[0]);if(document.activeElement!==i)i.value=S.funds[p[1]]});
+  }
+  $("fnSave").onclick=function(){
+    if(!S.db||!S.room)return;
+    var d={f1:$("fn1").value.trim()||"กองทุนที่ 1",f2:$("fn2").value.trim()||"กองทุนที่ 2",shop:$("fn3").value.trim()||"ร้าน"};
+    col("settings").doc("funds").set(d).then(function(){toast("บันทึกชื่อกองทุนแล้ว")}).catch(function(e){showErr("บันทึกชื่อไม่สำเร็จ: "+e.message)});
+  };
+  function desc(g){var sn=g.snap||{};return g.by+(g.action==="delete"?" ลบ":" เพิ่ม")+(sn.type==="inc"?"รายรับ ":"รายจ่าย ")+(sn.fund?"["+fname(sn.fund)+"] ":"")+(sn.category||"")+" "+fmt(sn.amount||0)+" บาท"}
   function updBadge(){
     var seen=+(ls("m_seen")||0),vis=!$("p-log").classList.contains("hide");
     if(vis){seen=Date.now();ls("m_seen",String(seen))}
@@ -221,7 +255,10 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   function render(){
     var key=S.month.getFullYear()+"-"+String(S.month.getMonth()+1).padStart(2,"0");
     $("monLbl").textContent=TH[S.month.getMonth()]+" "+(S.month.getFullYear()+543);
-    var items=S.tx.filter(function(t){return(t.date||"").slice(0,7)===key});
+    var items=S.tx.filter(function(t){return(t.date||"").slice(0,7)===key&&(S.fund==="all"||fundOf(t)===S.fund)});
+    var fc=$("fundCards");fc.textContent="";
+    FK.forEach(function(k){var tot=0;S.tx.forEach(function(t){if(fundOf(t)===k)tot+=(t.type==="inc"?1:-1)*t.amount});
+      var d=el("div",null,fname(k)+" (สะสม)");d.appendChild(el("b",tot<0?"exp":"inc",(tot<0?"-":"")+fmt(Math.abs(tot))));fc.appendChild(d)});
     var inc=0,exp=0;items.forEach(function(t){if(t.type==="inc")inc+=t.amount;else exp+=t.amount});
     $("sInc").textContent=fmt(inc);$("sExp").textContent=fmt(exp);
     var bal=inc-exp,b=$("sBal");b.textContent=(bal<0?"-":"")+fmt(Math.abs(bal));b.className=bal<0?"exp":"inc";
@@ -230,7 +267,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     items.forEach(function(t){
       var r=el("div","item"),m=el("div","m");
       m.appendChild(el("div","t",t.category+(t.note?" · "+t.note:"")));
-      var s=el("div","s");s.appendChild(el("span","tag",who(t.by)));s.appendChild(document.createTextNode(fdate(t.date)));m.appendChild(s);
+      var s=el("div","s");if(S.fund==="all")s.appendChild(el("span","tag",fname(fundOf(t))));s.appendChild(el("span","tag",who(t.by)));s.appendChild(document.createTextNode(fdate(t.date)));m.appendChild(s);
       var a=el("div","amt "+(t.type==="inc"?"inc":"exp"),(t.type==="inc"?"+":"-")+fmt(t.amount));
       var d=el("button","del"+(S.armed===t.id?" ask":""),S.armed===t.id?"ยืนยันลบ?":"ลบ");
       d.onclick=function(){
@@ -244,7 +281,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     S.logs.forEach(function(g){
       var r=el("div","item"),m=el("div","m"),sn=g.snap||{};
       var head=el("div","t");head.appendChild(el("span","tag"+(g.action==="delete"?" d":""),g.action==="delete"?"ลบ":"เพิ่ม"));
-      head.appendChild(document.createTextNode(who(g.by)+(g.action==="delete"?" ลบ ":" เพิ่ม ")+(sn.category||"")+(sn.note?" · "+sn.note:"")));
+      head.appendChild(document.createTextNode(who(g.by)+(g.action==="delete"?" ลบ ":" เพิ่ม ")+(sn.fund?"["+fname(sn.fund)+"] ":"")+(sn.category||"")+(sn.note?" · "+sn.note:"")));
       m.appendChild(head);
       var extra=g.action==="delete"&&g.origBy&&g.origBy!==g.by?" (ผู้เพิ่มเดิม: "+who(g.origBy)+")":"";
       m.appendChild(el("div","s",new Date(g.ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+extra));
@@ -259,6 +296,10 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     S.unsub.forEach(function(u){u()});S.unsub=[];S.tx=[];S.logs=[];S.logsReady=false;
     if(ls("m_seen")===null)ls("m_seen",String(Date.now()));
     col("members").doc(S.name).set({name:S.name,ts:Date.now()}).catch(function(){});
+    S.unsub.push(col("settings").doc("funds").onSnapshot(function(d){
+      if(d.exists){var v=d.data();FK.forEach(function(k){if(v[k])S.funds[k]=v[k]})}
+      fillFunds();render();
+    },function(){}));
     S.unsub.push(col("members").onSnapshot(function(sn){S.members=sn.docs.map(function(d){return d.id})},function(){}));
     S.unsub.push(col("tx").onSnapshot(function(sn){
       S.tx=sn.docs.map(function(d){var o=d.data();o.id=d.id;return o}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||b.ts-a.ts});
@@ -287,6 +328,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     S.unsub.forEach(function(u){u()});S.unsub=[];show("setup");refreshNoti();
   };
 
+  fillFunds();
   // ตรวจเวอร์ชันใหม่
   $("verTxt").textContent="เวอร์ชันแอป "+APP_VERSION;
   async function checkUpdate(){
