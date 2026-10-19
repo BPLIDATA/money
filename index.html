@@ -50,7 +50,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
 .tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:99px;background:var(--soft);color:var(--pri);margin-right:4px}
 .tag.d{background:#fee2e2;color:#b91c1c}
 .hint{font-size:13px;color:var(--mut);margin-top:6px}
-.hide{display:none}
+.hide{display:none!important}
 #err{border-color:var(--exp);color:var(--exp)}
 .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:99px;background:var(--exp);color:#fff;font-size:12px;line-height:18px}
 .toast{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);max-width:536px;margin:0 auto;background:var(--pri);color:#fff;padding:12px 14px;border-radius:12px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);font-weight:600}
@@ -154,7 +154,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION="1.5";
+  var APP_VERSION="1.6";
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
