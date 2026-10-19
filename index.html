@@ -178,6 +178,10 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <button class="link" id="cfgBtn">⚙︎ ตั้งค่า</button>
     </div>
   </div>
+  <div id="userBar" class="row hide" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px 12px;margin-bottom:10px;font-size:13px">
+    <span>👤 ใช้งานในชื่อ: <b id="curUserLbl" style="color:var(--pri)">แก๊ส</b></span>
+    <button type="button" class="mini" id="quickSwitchUserBtn" style="padding:4px 9px;font-size:12px;border-radius:6px;background:var(--soft);color:var(--pri);font-weight:700">🔄 สลับเป็นแฟน (น้ำ)</button>
+  </div>
   <div id="err" class="card hide"></div>
 
   <!-- หน้าตั้งค่า -->
@@ -239,6 +243,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
   <!-- หน้าหลัก: รายการ / สรุป -->
   <section id="p-home" class="hide">
+    <div id="pendingReqBanner" class="hide" style="margin-bottom:10px"></div>
     <div class="mon"><button id="prev">‹</button><b id="monLbl"></b><button id="next">›</button></div>
     <div class="fcs" id="fundCards"></div>
 
@@ -531,7 +536,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   var S = {
     fundList: [
       {id:"f1", name:"ของแก๊ส", owner:"แก๊ส", hideBalance:true},
-      {id:"f2", name:"ของน้ำ", owner:"น้ำ", hideBalance:false},
+      {id:"f2", name:"ของน้ำ", owner:"น้ำ", hideBalance:true},
       {id:"shop", name:"ของร้าน", owner:"all", hideBalance:false}
     ],
     funds: {f1:"ของแก๊ส", f2:"ของน้ำ", shop:"ของร้าน"},
@@ -622,7 +627,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var f = S.fundList.find(function(x){ return x.id === fundId; });
     if(f && typeof f.hideBalance === "boolean") return f.hideBalance;
     var owner = getFundOwner(fundId);
-    return isGas(owner); // เริ่มต้นบัญชีของแก๊สปิดยอดเป็น xxxx
+    return owner && owner !== "all"; // บัญชีส่วนตัวเริ่มต้นปิดยอดเป็น xxxx (จะเปิดหรือปิดก็ได้แล้วแต่คน)
   }
   function isFundMasked(fundId){
     if(!isFundHidden(fundId)) return false;
@@ -1489,6 +1494,43 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var key = S.month.getFullYear() + "-" + String(S.month.getMonth() + 1).padStart(2, "0");
     $("monLbl").textContent = TH[S.month.getMonth()] + " " + (S.month.getFullYear() + 543);
 
+    // อัปเดตแถบผู้ใช้งานปัจจุบัน
+    var uBar = $("userBar");
+    if(uBar && S.name){
+      uBar.classList.remove("hide");
+      $("curUserLbl").textContent = S.name;
+      $("quickSwitchUserBtn").textContent = isGas(S.name) ? "🔄 สลับเป็นแฟน (น้ำ)" : "🔄 สลับเป็นผม (แก๊ส)";
+    }
+
+    // กล่องแจ้งเตือนคำขอดูยอดเงินเด่นชัดด้านบนสุด
+    var pBanner = $("pendingReqBanner");
+    if(pBanner){
+      pBanner.textContent = "";
+      var myPendingFunds = S.fundList.filter(function(f){
+        return isMyFund(f.id) && S.privacy && S.privacy[f.id] && S.privacy[f.id].requestPending;
+      });
+      if(myPendingFunds.length > 0){
+        pBanner.classList.remove("hide");
+        myPendingFunds.forEach(function(f){
+          var p = S.privacy[f.id] || {};
+          var card = el("div", "pending-req-box");
+          card.style.margin = "0 0 8px 0";
+          var tit = el("div", "tit", "🔔 มีคำขอดูยอดเงิน: " + (p.requestedBy || "แฟน") + " ขอดูยอด \"" + fname(f.id) + "\"");
+          var sub = el("div", "sub", (p.requestedBy || "แฟน") + " ขอสิทธิ์ดูยอดเงินและรายการเป็นเวลา 1 วัน (24 ชั่วโมง)");
+          var btns = el("div", "btns");
+          var bYes = el("button", "btn-yes", "✓ อนุญาตให้ดูยอด 1 วัน (24 ชม.)");
+          bYes.onclick = function(e){ grantViewFund(f.id, e); };
+          var bNo = el("button", "btn-no", "✕ ปฏิเสธ");
+          bNo.onclick = function(e){ denyViewFund(f.id, e); };
+          btns.appendChild(bYes); btns.appendChild(bNo);
+          card.appendChild(tit); card.appendChild(sub); card.appendChild(btns);
+          pBanner.appendChild(card);
+        });
+      } else {
+        pBanner.classList.add("hide");
+      }
+    }
+
     // 1. คำนวณยอดเงินแต่ละกองทุน (รองรับ inc, exp, transfer)
     var fc = $("fundCards"); fc.textContent = "";
     var rows = S.fundList.map(function(f){
@@ -2179,8 +2221,18 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     col("members").doc(S.name).set({name: S.name, ts: Date.now()}).catch(function(){});
 
     // 0. Privacy settings (การซ่อนยอด xxxx และการขอสิทธิ์ดูยอด 1 วัน)
+    var lastPendingCount = -1;
     S.unsub.push(col("settings").doc("privacy").onSnapshot(function(d){
       S.privacy = d.exists ? d.data() : {};
+      var myPending = S.fundList.filter(function(f){
+        return isMyFund(f.id) && S.privacy && S.privacy[f.id] && S.privacy[f.id].requestPending;
+      });
+      if(lastPendingCount >= 0 && myPending.length > lastPendingCount){
+        var reqName = (S.privacy[myPending[0].id] && S.privacy[myPending[0].id].requestedBy) || "แฟน";
+        var msg = "🔔 " + reqName + " กดขอดูยอดเงิน \"" + fname(myPending[0].id) + "\" (ขอสิทธิ์ 1 วัน)";
+        toast(msg); sysNotify(msg);
+      }
+      lastPendingCount = myPending.length;
       render();
     }, function(){}));
 
@@ -2262,6 +2314,15 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
   $("pickGasBtn").onclick = function(){ $("sName").value = "แก๊ส"; refreshNoti(); };
   $("pickNamBtn").onclick = function(){ $("sName").value = "น้ำ"; refreshNoti(); };
+
+  $("quickSwitchUserBtn").onclick = function(){
+    var nextUser = isGas(S.name) ? "น้ำ" : "แก๊ส";
+    S.name = nextUser;
+    ls("m_name", nextUser);
+    $("sName").value = nextUser;
+    toast("✓ สลับเป็น " + (isGas(nextUser) ? "ผม (แก๊ส)" : "แฟน (น้ำ)") + " แล้ว");
+    connect();
+  };
 
   $("sGo").onclick = function(){
     var n = $("sName").value.trim(), r = $("sRoom").value.trim().replace(/[\/\s]/g,"");
