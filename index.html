@@ -52,6 +52,11 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
 .hint{font-size:13px;color:var(--mut);margin-top:6px}
 .hide{display:none}
 #err{border-color:var(--exp);color:var(--exp)}
+.badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:99px;background:var(--exp);color:#fff;font-size:12px;line-height:18px}
+.toast{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);max-width:536px;margin:0 auto;background:var(--pri);color:#fff;padding:12px 14px;border-radius:12px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);font-weight:600}
+input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
+.cb{display:flex;align-items:center;font-size:15px;color:var(--tx);margin:10px 0 6px}
+.mini{padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:14px}
 </style>
 </head>
 <body>
@@ -66,6 +71,16 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
       <label>ชื่อของคุณ</label><input id="sName" maxlength="20" placeholder="เช่น แบงค์">
       <label>รหัสห้อง (อย่างน้อย 8 ตัวอักษร)</label><input id="sRoom" maxlength="40" placeholder="เช่น mooban-8842-kaew" autocapitalize="off" autocorrect="off">
       <button class="go" id="sGo">เริ่มใช้งาน</button>
+    </div>
+    <div class="card">
+      <b>🔔 การแจ้งเตือนเมื่ออีกคนเพิ่ม/ลบรายการ</b>
+      <div class="hint"><b>แบบที่ 1: ในแอป</b> เด้งแจ้งเตือนทันทีที่อีกคนเพิ่ม/ลบ ขณะเปิดแอปอยู่ และมีเลขแดงที่แท็บ “ประวัติ” เมื่อมีรายการใหม่ที่ยังไม่ได้ดู</div>
+      <button class="mini" id="nBtn" style="margin-top:8px">เปิดแจ้งเตือนบนเครื่องนี้</button>
+      <div class="hint" style="margin-top:16px"><b>แบบที่ 2: แจ้งเตือนแม้ปิดแอป</b> (ฟรี ผ่านแอป ntfy) ทั้งสองคนต้องทำ: ติดตั้งแอป <b>ntfy</b> → กด “+” → ใส่ชื่อ topic ด้านล่าง → Subscribe แล้วติ๊กช่องนี้</div>
+      <label class="cb"><input type="checkbox" id="nNtfy">เปิดใช้การแจ้งเตือนผ่าน ntfy</label>
+      <label>topic ของคุณ (ใช้ใน ntfy)</label>
+      <div style="display:flex;gap:6px"><input id="nTopic" readonly placeholder="บันทึกชื่อและรหัสห้องก่อน"><button class="mini" id="nCopy" style="height:44px">คัดลอก</button></div>
+      <div class="hint">ข้อความแจ้งเตือน (ชื่อคนเพิ่ม ประเภท หมวด จำนวนเงิน) จะผ่านเซิร์ฟเวอร์ ntfy.sh ของบุคคลที่สาม ไม่ต้องการก็ไม่ต้องติ๊ก</div>
     </div>
   </section>
 
@@ -96,10 +111,11 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
   </section>
 </div>
 
+<div id="toast" class="toast hide"></div>
 <nav class="tabs hide" id="tabs">
   <button data-t="home" class="on">📋 รายการ</button>
   <button data-t="add">➕ เพิ่ม</button>
-  <button data-t="log">🕘 ประวัติ</button>
+  <button data-t="log">🕘 ประวัติ<span id="bdg" class="badge hide"></span></button>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -110,7 +126,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
   var $=function(i){return document.getElementById(i)};
   var CATS={exp:["อาหาร","เดินทาง","ของใช้","บิล/ค่าเช่า","บันเทิง","สุขภาพ","อื่นๆ"],inc:["เงินเดือน","รายได้พิเศษ","ได้รับเงิน","อื่นๆ"]};
   var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-  var S={tx:[],logs:[],name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
+  var S={tx:[],logs:[],members:[],logsReady:false,name:"",room:"",type:"exp",month:new Date(),db:null,armed:null,unsub:[]};
   S.month.setDate(1);
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
   function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
@@ -125,6 +141,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
     ["setup","home","add","log"].forEach(function(p){$("p-"+p).classList.toggle("hide",p!==page)});
     $("tabs").classList.toggle("hide",page==="setup");
     document.querySelectorAll(".tabs button").forEach(function(b){b.classList.toggle("on",b.dataset.t===page)});
+    if(S.name)updBadge();
   }
   document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){show(b.dataset.t)}});
 
@@ -144,6 +161,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
       var ref=col("tx").doc();
       await ref.set(body);
       await col("logs").add({action:"add",txId:ref.id,snap:{type:body.type,amount:body.amount,category:body.category,note:body.note,date:body.date},by:S.name,ts:Date.now()});
+      pushOthers(desc({by:S.name,action:"add",snap:body}));
       $("fAmt").value="";$("fNote").value="";show("home");
     }catch(e){showErr("บันทึกไม่สำเร็จ: "+(e&&e.message||e))}
     btn.disabled=false;
@@ -153,8 +171,47 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
     try{
       await col("tx").doc(t.id).delete();
       await col("logs").add({action:"delete",txId:t.id,snap:{type:t.type,amount:t.amount,category:t.category,note:t.note,date:t.date},origBy:t.by,by:S.name,ts:Date.now()});
+      pushOthers(desc({by:S.name,action:"delete",snap:t}));
     }catch(e){showErr("ลบไม่สำเร็จ: "+(e&&e.message||e))}
   }
+
+  function desc(g){var sn=g.snap||{};return g.by+(g.action==="delete"?" ลบ":" เพิ่ม")+(sn.type==="inc"?"รายรับ ":"รายจ่าย ")+(sn.category||"")+" "+fmt(sn.amount||0)+" บาท"}
+  function updBadge(){
+    var seen=+(ls("m_seen")||0),vis=!$("p-log").classList.contains("hide");
+    if(vis){seen=Date.now();ls("m_seen",String(seen))}
+    var n=S.logs.filter(function(g){return g.by!==S.name&&g.ts>seen}).length,b=$("bdg");
+    b.textContent=n>9?"9+":n;b.classList.toggle("hide",n===0);
+  }
+  var toastT;
+  function toast(msg){var t=$("toast");t.textContent=msg;t.classList.remove("hide");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.add("hide")},5000)}
+  function sysNotify(msg){
+    if(!("Notification" in window)||Notification.permission!=="granted"||!document.hidden)return;
+    var o={body:msg,icon:"icon-192.png",tag:"money"};
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(function(r){r.showNotification("💰 รายรับรายจ่าย",o)}).catch(function(){try{new Notification("💰 รายรับรายจ่าย",o)}catch(e){}});
+    else try{new Notification("💰 รายรับรายจ่าย",o)}catch(e){}
+  }
+  async function sha(s){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("").slice(0,20)}
+  async function topicOf(room,name){return "money-"+await sha(room+"|"+name)}
+  function pushOthers(text){
+    if(ls("m_ntfy")!=="1")return;
+    S.members.forEach(async function(n){
+      if(n===S.name)return;
+      try{var t=await topicOf(S.room,n);fetch("https://ntfy.sh/",{method:"POST",body:JSON.stringify({topic:t,title:"💰 รายรับรายจ่าย",message:text})}).catch(function(){})}catch(e){}
+    });
+  }
+  function refreshNoti(){
+    var b=$("nBtn");
+    if(!("Notification" in window)){b.textContent="เครื่องนี้ไม่รองรับ (iPhone ต้องติดตั้งแอปลงหน้าจอก่อน)";b.disabled=true}
+    else if(Notification.permission==="granted"){b.textContent="✓ เปิดแจ้งเตือนบนเครื่องนี้แล้ว";b.disabled=true}
+    else if(Notification.permission==="denied"){b.textContent="ถูกบล็อก (ไปเปิดในการตั้งค่าเบราว์เซอร์)";b.disabled=true}
+    $("nNtfy").checked=ls("m_ntfy")==="1";
+    var n=$("sName").value.trim()||S.name,r=$("sRoom").value.trim().replace(/[\/\s]/g,"")||S.room;
+    if(n&&r&&r.length>=8)topicOf(r,n).then(function(t){$("nTopic").value=t});else $("nTopic").value="";
+  }
+  $("nBtn").onclick=function(){Notification.requestPermission().then(refreshNoti)};
+  $("nNtfy").onchange=function(){ls("m_ntfy",this.checked?"1":"0")};
+  $("nCopy").onclick=function(){var v=$("nTopic").value;if(!v)return;try{navigator.clipboard.writeText(v);this.textContent="คัดลอกแล้ว"}catch(e){$("nTopic").select()}};
+  $("sName").oninput=refreshNoti;$("sRoom").oninput=refreshNoti;
 
   function render(){
     var key=S.month.getFullYear()+"-"+String(S.month.getMonth()+1).padStart(2,"0");
@@ -188,18 +245,28 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
       m.appendChild(el("div","s",new Date(g.ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+extra));
       r.appendChild(m);r.appendChild(el("div","amt "+(sn.type==="inc"?"inc":"exp"),(sn.type==="inc"?"+":"-")+fmt(sn.amount||0)));ll.appendChild(r);
     });
+    if(S.name)updBadge();
   }
   $("prev").onclick=function(){S.month.setMonth(S.month.getMonth()-1);render()};
   $("next").onclick=function(){S.month.setMonth(S.month.getMonth()+1);render()};
 
   function connect(){
-    S.unsub.forEach(function(u){u()});S.unsub=[];S.tx=[];S.logs=[];
+    S.unsub.forEach(function(u){u()});S.unsub=[];S.tx=[];S.logs=[];S.logsReady=false;
+    if(ls("m_seen")===null)ls("m_seen",String(Date.now()));
+    col("members").doc(S.name).set({name:S.name,ts:Date.now()}).catch(function(){});
+    S.unsub.push(col("members").onSnapshot(function(sn){S.members=sn.docs.map(function(d){return d.id})},function(){}));
     S.unsub.push(col("tx").onSnapshot(function(sn){
       S.tx=sn.docs.map(function(d){var o=d.data();o.id=d.id;return o}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||b.ts-a.ts});
       render();
     },function(e){showErr("อ่านข้อมูลไม่ได้ (เช็ก Firebase rules): "+e.message)}));
     S.unsub.push(col("logs").orderBy("ts","desc").limit(200).onSnapshot(function(sn){
-      S.logs=sn.docs.map(function(d){return d.data()});render();
+      var first=!S.logsReady;S.logsReady=true;
+      S.logs=sn.docs.map(function(d){return d.data()});
+      if(!first)sn.docChanges().forEach(function(c){
+        if(c.type!=="added")return;var g=c.doc.data();
+        if(g.by&&g.by!==S.name){var m=desc(g);toast("🔔 "+m);sysNotify(m)}
+      });
+      render();
     },function(e){}));
     render();show("home");
   }
@@ -212,7 +279,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
   };
   $("cfgBtn").onclick=function(){
     $("sName").value=S.name;$("sRoom").value=S.room;
-    S.unsub.forEach(function(u){u()});S.unsub=[];show("setup");
+    S.unsub.forEach(function(u){u()});S.unsub=[];show("setup");refreshNoti();
   };
 
   // boot
@@ -222,7 +289,7 @@ label{font-size:13px;color:var(--mut);display:block;margin:2px 0 4px}
     else{
       firebase.initializeApp(cfg);S.db=firebase.firestore();
       S.name=ls("m_name")||"";S.room=ls("m_room")||"";
-      if(S.name&&S.room)connect();else show("setup");
+      if(S.name&&S.room)connect();else{show("setup");refreshNoti()}
     }
   }catch(e){showErr("เริ่มระบบไม่สำเร็จ: "+(e&&e.message||e));show("setup")}
 
