@@ -160,30 +160,37 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <label>รหัสห้อง (อย่างน้อย 8 ตัวอักษร)</label><input id="sRoom" maxlength="40" placeholder="เช่น mooban-8842-kaew" autocapitalize="off" autocorrect="off">
       <button class="go" id="sGo">เริ่มใช้งาน</button>
     </div>
+
+    <!-- กองทุน / กระเป๋าเงิน (เพิ่มได้ไม่จำกัด) -->
     <div class="card">
-      <b>🏦 ชื่อกองทุน (ทั้งสองคนเห็นตรงกัน)</b>
-      <div class="hint" style="margin-bottom:8px">ตั้งชื่อกระเป๋าเงิน เช่น “ของแก๊ส”, “ของน้ำ”, “ของร้าน/กองกลาง”</div>
-      <label>กองทุน 1</label><input id="fn1" maxlength="20" placeholder="ของแก๊ส">
-      <label>กองทุน 2</label><input id="fn2" maxlength="20" placeholder="ของน้ำ">
-      <label>กองทุน 3</label><input id="fn3" maxlength="20" placeholder="ของร้าน">
-      <button class="mini" id="fnSave">บันทึกชื่อกองทุน</button>
+      <div class="row" style="margin-bottom:6px">
+        <b>🏦 กองทุน / กระเป๋าเงิน</b>
+        <button type="button" class="mini" id="addFundBtn" style="background:var(--soft);color:var(--pri);font-weight:700">+ เพิ่มกองทุนใหม่</button>
+      </div>
+      <div class="hint" style="margin-bottom:10px">สามารถเพิ่มกระเป๋าเงินได้ไม่จำกัด เช่น “ของแก๊ส”, “ของน้ำ”, “ของร้าน/กองกลาง”, “เงินสด”, “บัตรเครดิต”</div>
+      <div id="fundListEditor" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+      <button class="mini" id="fnSave">บันทึกชื่อกองทุนทั้งหมด</button>
     </div>
+
+    <!-- หมวดหมู่ / หัวข้อ -->
     <div class="card">
-      <b>🏷️ ปรับแต่งหมวดหมู่รายจ่าย & รายรับ</b>
-      <div class="hint">เพิ่มหรือลบหมวดหมู่ตามไลฟ์สไตล์คู่ของคุณ ทั้งคู่จะซิงก์เห็นตรงกัน</div>
-      <label>หมวดรายจ่าย</label>
+      <b>🏷️ จัดการหมวดหมู่ / หัวข้อรายการ</b>
+      <div class="hint">เพิ่มหรือลบหัวข้อได้ตามใจชอบ ทั้งคู่จะเห็นข้อมูลซิงก์ตรงกันทันที</div>
+      <label>หัวข้อรายจ่าย</label>
       <div id="expCatsList" class="tag-list"></div>
       <div style="display:flex;gap:6px">
-        <input id="newExpCat" placeholder="เพิ่มหมวดรายจ่ายใหม่ เช่น คาเฟ่, สัตว์เลี้ยง">
+        <input id="newExpCat" placeholder="เพิ่มหัวข้อรายจ่าย เช่น คาเฟ่, ช้อปปิ้ง, ค่าเน็ต">
         <button class="mini" id="addExpCat" style="height:44px;white-space:nowrap">+ เพิ่ม</button>
       </div>
-      <label style="margin-top:10px">หมวดรายรับ</label>
+      <label style="margin-top:10px">หัวข้อรายรับ</label>
       <div id="incCatsList" class="tag-list"></div>
       <div style="display:flex;gap:6px">
-        <input id="newIncCat" placeholder="เพิ่มหมวดรายรับใหม่ เช่น โบนัส, ขายของ">
+        <input id="newIncCat" placeholder="เพิ่มหัวข้อรายรับ เช่น โบนัส, ขายของออนไลน์">
         <button class="mini" id="addIncCat" style="height:44px;white-space:nowrap">+ เพิ่ม</button>
       </div>
     </div>
+
+    <!-- การแจ้งเตือน -->
     <div class="card">
       <b>🔔 การแจ้งเตือนเมื่ออีกคนบันทึก/แก้ไข/ลบ</b>
       <div class="hint"><b>แบบที่ 1: แจ้งเตือนบนเครื่องนี้</b> (Web Notification)</div>
@@ -217,8 +224,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     <!-- กล่องค้นหาและกรอง (เฉพาะหน้า List) -->
     <div id="filterBox">
       <div class="search-row">
-        <input id="searchTx" placeholder="🔍 ค้นหาโน้ต, หมวดหมู่...">
-        <select id="filterCat"><option value="all">ทุกหมวดหมู่</option></select>
+        <input id="searchTx" placeholder="🔍 ค้นหาโน้ต, หัวข้อ...">
+        <select id="filterCat"><option value="all">ทุกหัวข้อ</option></select>
       </div>
       <div class="card"><div id="list"></div></div>
     </div>
@@ -242,7 +249,10 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
       <!-- ปุ่มลัดจ่ายบ่อย (Quick Tags) -->
       <div id="quickBox">
-        <div class="q-title">⚡ บันทึกด่วนรายการจ่ายบ่อย:</div>
+        <div class="row" style="margin:6px 0 4px">
+          <div class="q-title" style="margin:0">⚡ ปุ่มลัดรายการจ่ายบ่อย:</div>
+          <button type="button" class="link" id="addQuickTagBtn" style="font-size:12px;color:var(--pri);padding:0;font-weight:700">+ เพิ่มปุ่มลัด</button>
+        </div>
         <div class="q-chips" id="quickChips"></div>
       </div>
 
@@ -250,7 +260,18 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       <div id="fStdFields">
         <label>กองทุน</label><select id="fFund"></select>
         <label>จำนวนเงิน (บาท)</label><input id="fAmt" type="number" step="any" inputmode="decimal" placeholder="0.00">
-        <label>หมวดหมู่</label><select id="fCat"></select>
+        
+        <!-- หมวดหมู่ / หัวข้อ พร้อมปุ่ม + เพิ่มหัวข้อใหม่ได้ทันที -->
+        <div class="row" style="margin-top:6px;margin-bottom:4px">
+          <label style="margin:0">หมวดหมู่ / หัวข้อ</label>
+          <button type="button" class="link" id="quickAddCatBtn" style="font-size:13px;color:var(--pri);padding:0;font-weight:700">+ เพิ่มหัวข้อใหม่</button>
+        </div>
+        <div id="newCatRow" class="hide" style="display:flex;gap:6px;margin-bottom:8px">
+          <input id="inlineCatName" placeholder="พิมพ์ชื่อหัวข้อใหม่..." style="margin-bottom:0">
+          <button type="button" class="mini" id="saveInlineCat" style="white-space:nowrap;background:var(--pri);color:#fff">+ บันทึก</button>
+          <button type="button" class="mini" id="cancelInlineCat" style="white-space:nowrap">ยกเลิก</button>
+        </div>
+        <select id="fCat"></select>
       </div>
 
       <!-- ฟิลด์สำหรับ โอนเงินข้ามกองทุน -->
@@ -320,7 +341,18 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       </div>
       <label>กองทุน</label><select id="eFund"></select>
       <label>จำนวนเงิน (บาท)</label><input id="eAmt" type="number" step="any" inputmode="decimal">
-      <label id="eCatLbl">หมวดหมู่</label><select id="eCat"></select>
+
+      <div class="row" style="margin-top:6px;margin-bottom:4px" id="eCatHeaderRow">
+        <label id="eCatLbl" style="margin:0">หมวดหมู่ / หัวข้อ</label>
+        <button type="button" class="link" id="eQuickAddCatBtn" style="font-size:13px;color:var(--pri);padding:0;font-weight:700">+ เพิ่มหัวข้อใหม่</button>
+      </div>
+      <div id="eNewCatRow" class="hide" style="display:flex;gap:6px;margin-bottom:8px">
+        <input id="eInlineCatName" placeholder="พิมพ์ชื่อหัวข้อใหม่..." style="margin-bottom:0">
+        <button type="button" class="mini" id="eSaveInlineCat" style="white-space:nowrap;background:var(--pri);color:#fff">+ บันทึก</button>
+        <button type="button" class="mini" id="eCancelInlineCat" style="white-space:nowrap">ยกเลิก</button>
+      </div>
+      <select id="eCat"></select>
+
       <label>โน้ตรายละเอียด</label><input id="eNote" type="text" maxlength="100">
       <label>วันที่</label><input id="eDate" type="date">
       <div id="eSplitBox">
@@ -343,6 +375,33 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       </div>
       <button class="go" id="eSave">บันทึกการแก้ไข</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal เพิ่มปุ่มลัดจ่ายบ่อย -->
+<div id="quickTagModal" class="modal hide">
+  <div class="modal-box">
+    <div class="modal-head">
+      <b>⚡ เพิ่มปุ่มลัดรายการจ่ายบ่อย</b>
+      <button class="close-btn" id="qtClose">&times;</button>
+    </div>
+    <label>ไอคอน</label>
+    <div class="chips" id="qtIcons">
+      <button type="button" class="on">☕</button>
+      <button type="button">🍚</button>
+      <button type="button">🧋</button>
+      <button type="button">🛒</button>
+      <button type="button">⛽</button>
+      <button type="button">🧺</button>
+      <button type="button">🐱</button>
+      <button type="button">🍰</button>
+      <button type="button">🎬</button>
+      <button type="button">💊</button>
+    </div>
+    <label>ชื่อปุ่มลัด (เช่น กาแฟเช้า)</label><input id="qtLabel" placeholder="เช่น กาแฟเช้า, ข้าวเที่ยง">
+    <label>จำนวนเงิน (บาท)</label><input id="qtAmt" type="number" step="any" inputmode="decimal" placeholder="60">
+    <label>หมวดหมู่ / หัวข้อ</label><select id="qtCat"></select>
+    <button class="go" id="qtSave">บันทึกปุ่มลัด</button>
   </div>
 </div>
 
@@ -418,14 +477,14 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION = "2.0";
+  var APP_VERSION = "2.1";
   var $ = function(i){ return document.getElementById(i); };
   var TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   var DEFAULT_CATS = {
     exp: ["อาหาร", "เดินทาง", "ของใช้", "บิล/ค่าเช่า", "บันเทิง", "สุขภาพ", "ช้อปปิ้ง", "คาเฟ่", "สัตว์เลี้ยง", "อื่นๆ"],
     inc: ["เงินเดือน", "รายได้พิเศษ", "ได้รับเงิน", "โบนัส", "อื่นๆ"]
   };
-  var QUICK_TAGS = [
+  var DEFAULT_QUICK_TAGS = [
     {icon:"☕", label:"กาแฟ", amt:60, cat:"อาหาร"},
     {icon:"🍚", label:"ข้าวเที่ยง", amt:50, cat:"อาหาร"},
     {icon:"🧋", label:"ชานม", amt:40, cat:"อาหาร"},
@@ -434,15 +493,20 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     {icon:"🧺", label:"ของใช้บ้าน", amt:200, cat:"ของใช้"},
     {icon:"🐱", label:"อาหารสัตว์", amt:150, cat:"สัตว์เลี้ยง"}
   ];
-  var FK = ["f1", "f2", "shop"];
 
   var S = {
+    fundList: [
+      {id:"f1", name:"ของแก๊ส"},
+      {id:"f2", name:"ของน้ำ"},
+      {id:"shop", name:"ของร้าน"}
+    ],
     funds: {f1:"ของแก๊ส", f2:"ของน้ำ", shop:"ของร้าน"},
     fund: "all",
     tx: [],
     logs: [],
     goals: [],
     members: [],
+    quickTags: JSON.parse(JSON.stringify(DEFAULT_QUICK_TAGS)),
     cats: JSON.parse(JSON.stringify(DEFAULT_CATS)),
     logsReady: false,
     name: "",
@@ -477,7 +541,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   function fdate(s){ var p=(s||"").split("-"); return p.length===3 ? (+p[2])+" "+TH[+p[1]-1]+" "+(+p[0]+543) : s; }
   function who(n){ return n === S.name ? "คุณ" : (n || "แฟน"); }
   function fname(k){ return S.funds[k || "f1"] || "กองทุน"; }
-  function fundOf(t){ return t.fund || "f1"; }
+  function fundOf(t){ return t.fund || (S.fundList[0] ? S.fundList[0].id : "f1"); }
   function showErr(m){ var e=$("err"); e.textContent=m; e.classList.remove("hide"); }
   function clearErr(){ $("err").classList.add("hide"); }
 
@@ -500,7 +564,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   }
   document.querySelectorAll(".tabs button").forEach(function(b){ b.onclick = function(){ show(b.dataset.t); }; });
 
-  // จัดการหมวดหมู่
+  // 1. จัดการหมวดหมู่ / หัวข้อ
   function fillCats(selectId, type, selectedVal){
     var s = $(selectId); if(!s) return;
     s.textContent = "";
@@ -516,7 +580,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       if(fc){
         var cur = fc.value || "all";
         fc.textContent = "";
-        var def = el("option", null, "ทุกหมวดหมู่"); def.value = "all"; fc.appendChild(def);
+        var def = el("option", null, "ทุกหัวข้อ"); def.value = "all"; fc.appendChild(def);
         (S.cats.exp || []).concat(S.cats.inc || []).forEach(function(c){
           var fo = el("option", null, c); fo.value = c;
           if(c === cur) fo.selected = true;
@@ -544,29 +608,200 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     });
   }
 
-  function addCat(type, name){
+  function addCat(type, name, cb){
     name = (name || "").trim();
     if(!name) return;
     S.cats[type] = S.cats[type] || [];
     if(S.cats[type].indexOf(name) === -1){
       S.cats[type].push(name);
-      saveCats();
-    }
+      saveCats(cb);
+    } else if(cb){ cb(); }
   }
   function removeCat(type, name){
     S.cats[type] = (S.cats[type] || []).filter(function(x){ return x !== name; });
     saveCats();
   }
-  function saveCats(){
+  function saveCats(cb){
     if(!S.db || !S.room) return;
     col("settings").doc("categories").set(S.cats).then(function(){
       fillCats("fCat", S.type === "transfer" ? "exp" : S.type);
+      fillCats("eCat", S.editingTx ? S.editingTx.type : "exp");
       renderCategoryTags();
-    }).catch(function(e){ showErr("บันทึกหมวดหมู่ไม่สำเร็จ: " + e.message); });
+      if(cb) cb();
+    }).catch(function(e){ showErr("บันทึกหัวข้อไม่สำเร็จ: " + e.message); });
   }
 
   $("addExpCat").onclick = function(){ addCat("exp", $("newExpCat").value); $("newExpCat").value = ""; };
   $("addIncCat").onclick = function(){ addCat("inc", $("newIncCat").value); $("newIncCat").value = ""; };
+
+  // + เพิ่มหัวข้อใหม่ได้ทันทีในหน้าเพิ่มรายการ (Inline Add Topic)
+  $("quickAddCatBtn").onclick = function(){
+    $("newCatRow").classList.toggle("hide");
+    if(!$("newCatRow").classList.contains("hide")) $("inlineCatName").focus();
+  };
+  $("cancelInlineCat").onclick = function(){
+    $("inlineCatName").value = ""; $("newCatRow").classList.add("hide");
+  };
+  function submitInlineCat(){
+    var val = ($("inlineCatName").value || "").trim();
+    if(!val){ $("inlineCatName").focus(); return; }
+    addCat(S.type === "transfer" ? "exp" : S.type, val, function(){
+      fillCats("fCat", S.type === "transfer" ? "exp" : S.type, val);
+      $("fCat").value = val;
+      $("inlineCatName").value = "";
+      $("newCatRow").classList.add("hide");
+      toast("✓ เพิ่มหัวข้อ '" + val + "' แล้ว");
+    });
+  }
+  $("saveInlineCat").onclick = submitInlineCat;
+  $("inlineCatName").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); submitInlineCat(); } };
+
+  // + เพิ่มหัวข้อใหม่ใน Modal แก้ไข
+  $("eQuickAddCatBtn").onclick = function(){
+    $("eNewCatRow").classList.toggle("hide");
+    if(!$("eNewCatRow").classList.contains("hide")) $("eInlineCatName").focus();
+  };
+  $("eCancelInlineCat").onclick = function(){
+    $("eInlineCatName").value = ""; $("eNewCatRow").classList.add("hide");
+  };
+  function submitEditInlineCat(){
+    var val = ($("eInlineCatName").value || "").trim();
+    if(!val){ $("eInlineCatName").focus(); return; }
+    var curType = (S.editingTx && S.editingTx.type) ? S.editingTx.type : "exp";
+    addCat(curType, val, function(){
+      fillCats("eCat", curType, val);
+      $("eCat").value = val;
+      $("eInlineCatName").value = "";
+      $("eNewCatRow").classList.add("hide");
+      toast("✓ เพิ่มหัวข้อ '" + val + "' แล้ว");
+    });
+  }
+  $("eSaveInlineCat").onclick = submitEditInlineCat;
+  $("eInlineCatName").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); submitEditInlineCat(); } };
+
+  // 2. จัดการกองทุน / กระเป๋าเงิน (Dynamic Funds)
+  function renderFundEditor(){
+    var box = $("fundListEditor"); if(!box) return;
+    box.textContent = "";
+    S.fundList.forEach(function(f, idx){
+      var r = el("div", null);
+      r.style.display = "flex"; r.style.gap = "6px"; r.style.alignItems = "center";
+
+      var inp = el("input", null);
+      inp.type = "text"; inp.value = f.name; inp.maxLength = 25;
+      inp.placeholder = "ชื่อกองทุนที่ " + (idx + 1);
+      inp.style.marginBottom = "0";
+      inp.oninput = function(){ f.name = this.value; };
+      r.appendChild(inp);
+
+      if(S.fundList.length > 1){
+        var delBtn = el("button", "del", "ลบ");
+        delBtn.type = "button";
+        delBtn.onclick = function(){
+          if(confirm("ต้องการลบกองทุน '" + f.name + "' หรือไม่?")){
+            S.fundList.splice(idx, 1);
+            renderFundEditor();
+          }
+        };
+        r.appendChild(delBtn);
+      }
+      box.appendChild(r);
+    });
+  }
+
+  $("addFundBtn").onclick = function(){
+    var newId = "f_" + Date.now();
+    S.fundList.push({ id: newId, name: "กองทุนใหม่ " + (S.fundList.length + 1) });
+    renderFundEditor();
+  };
+
+  $("fnSave").onclick = function(){
+    if(!S.db || !S.room) return;
+    S.fundList.forEach(function(f, i){
+      f.name = (f.name || "").trim() || ("กองทุน " + (i + 1));
+    });
+    var d = { list: S.fundList };
+    S.fundList.forEach(function(f){ d[f.id] = f.name; });
+    col("settings").doc("funds").set(d).then(function(){
+      toast("✓ บันทึกกองทุนเรียบร้อยแล้ว");
+      fillFunds(); render();
+    }).catch(function(e){ showErr("บันทึกกองทุนไม่สำเร็จ: " + e.message); });
+  };
+
+  function fillFunds(){
+    S.funds = {};
+    S.fundList.forEach(function(f){ S.funds[f.id] = f.name; });
+
+    var cur = $("fFund").value || (S.fund !== "all" ? S.fund : ls("m_lastfund")) || (S.fundList[0] ? S.fundList[0].id : "f1");
+    var selects = ["fFund", "fTrfFrom", "fTrfTo", "eFund", "depFund"];
+    selects.forEach(function(sid){
+      var s = $(sid); if(!s) return;
+      var curVal = s.value;
+      s.textContent = "";
+      S.fundList.forEach(function(f){
+        var o = el("option", null, f.name); o.value = f.id; s.appendChild(o);
+      });
+      if(curVal) s.value = curVal;
+    });
+    if($("fFund")) $("fFund").value = cur;
+    if($("fTrfFrom") && !$("fTrfFrom").value && S.fundList[0]) $("fTrfFrom").value = S.fundList[0].id;
+    if($("fTrfTo") && !$("fTrfTo").value && S.fundList[1]) $("fTrfTo").value = S.fundList[1].id;
+
+    renderFundEditor();
+  }
+
+  // 3. จัดการปุ่มลัดจ่ายบ่อย (Custom Quick Tags)
+  function renderQuickTags(){
+    var box = $("quickChips"); if(!box) return;
+    box.textContent = "";
+    (S.quickTags || []).forEach(function(q){
+      var b = el("button", "q-btn", q.icon + " " + q.label + " " + q.amt);
+      b.type = "button";
+      b.onclick = function(){
+        setAddType("exp");
+        $("fAmt").value = q.amt;
+        $("fCat").value = q.cat;
+        $("fNote").value = q.label;
+        toast("เลือก " + q.label + " " + q.amt + " บาท");
+      };
+      box.appendChild(b);
+    });
+  }
+
+  $("addQuickTagBtn").onclick = function(){
+    fillCats("qtCat", "exp");
+    $("qtLabel").value = ""; $("qtAmt").value = "";
+    $("quickTagModal").classList.remove("hide");
+  };
+  $("qtClose").onclick = function(){ $("quickTagModal").classList.add("hide"); };
+
+  document.querySelectorAll("#qtIcons button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll("#qtIcons button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+    };
+  });
+
+  $("qtSave").onclick = function(){
+    var label = $("qtLabel").value.trim();
+    var amt = parseFloat($("qtAmt").value);
+    var cat = $("qtCat").value;
+    if(!label){ $("qtLabel").focus(); return; }
+    if(!(amt > 0)){ $("qtAmt").focus(); return; }
+
+    var onIcon = document.querySelector("#qtIcons button.on");
+    var icon = onIcon ? onIcon.textContent : "⚡";
+
+    S.quickTags = S.quickTags || [];
+    S.quickTags.push({ icon: icon, label: label, amt: amt, cat: cat });
+
+    if(S.db && S.room){
+      col("settings").doc("quickTags").set({ list: S.quickTags }).catch(function(){});
+    }
+    renderQuickTags();
+    $("quickTagModal").classList.add("hide");
+    toast("✓ เพิ่มปุ่มลัด '" + label + "' แล้ว");
+  };
 
   // สลับประเภทในหน้าเพิ่ม (รายจ่าย / รายรับ / โอนเงิน)
   function setAddType(t){
@@ -628,58 +863,6 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   };
   $("slipRemBtn").onclick = function(){
     S.slip = ""; $("fSlipFile").value = ""; $("slipPrevBox").classList.add("hide");
-  };
-
-  // Quick Tags
-  function renderQuickTags(){
-    var box = $("quickChips"); if(!box) return;
-    box.textContent = "";
-    QUICK_TAGS.forEach(function(q){
-      var b = el("button", "q-btn", q.icon + " " + q.label + " " + q.amt);
-      b.type = "button";
-      b.onclick = function(){
-        setAddType("exp");
-        $("fAmt").value = q.amt;
-        $("fCat").value = q.cat;
-        $("fNote").value = q.label;
-        toast("เลือก " + q.label + " " + q.amt + " บาท");
-      };
-      box.appendChild(b);
-    });
-  }
-
-  // เติมตัวเลือกกองทุน
-  function fillFunds(){
-    var cur = $("fFund").value || (S.fund !== "all" ? S.fund : ls("m_lastfund")) || "f1";
-    var selects = ["fFund", "fTrfFrom", "fTrfTo", "eFund", "depFund"];
-    selects.forEach(function(sid){
-      var s = $(sid); if(!s) return;
-      var curVal = s.value;
-      s.textContent = "";
-      FK.forEach(function(k){
-        var o = el("option", null, fname(k)); o.value = k; s.appendChild(o);
-      });
-      if(curVal) s.value = curVal;
-    });
-    if($("fFund")) $("fFund").value = cur;
-    if($("fTrfFrom") && !$("fTrfFrom").value) $("fTrfFrom").value = "f1";
-    if($("fTrfTo") && !$("fTrfTo").value) $("fTrfTo").value = "shop";
-
-    [["fn1","f1"],["fn2","f2"],["fn3","shop"]].forEach(function(p){
-      var i = $(p[0]); if(i && document.activeElement !== i) i.value = S.funds[p[1]];
-    });
-  }
-
-  $("fnSave").onclick = function(){
-    if(!S.db || !S.room) return;
-    var d = {
-      f1: $("fn1").value.trim() || "ของแก๊ส",
-      f2: $("fn2").value.trim() || "ของน้ำ",
-      shop: $("fn3").value.trim() || "ของร้าน"
-    };
-    col("settings").doc("funds").set(d).then(function(){
-      toast("บันทึกชื่อกองทุนแล้ว");
-    }).catch(function(e){ showErr("บันทึกชื่อไม่สำเร็จ: " + e.message); });
   };
 
   // บันทึกรายการใหม่
@@ -767,14 +950,14 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     $("eAmt").value = t.amount;
     $("eNote").value = t.note || "";
     $("eDate").value = t.date || ymd(new Date());
-    $("eFund").value = t.fund || "f1";
+    $("eFund").value = t.fund || (S.fundList[0] ? S.fundList[0].id : "f1");
 
     var isTrf = (t.type === "transfer");
     $("eBExp").classList.toggle("on", t.type === "exp");
     $("eBInc").classList.toggle("on", t.type === "inc");
     $("eSeg").classList.toggle("hide", isTrf);
     $("eCat").classList.toggle("hide", isTrf);
-    $("eCatLbl").classList.toggle("hide", isTrf);
+    $("eCatHeaderRow").classList.toggle("hide", isTrf);
     $("eSplitBox").classList.toggle("hide", t.type !== "exp");
 
     if(!isTrf) fillCats("eCat", t.type || "exp", t.category);
@@ -964,7 +1147,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
     // 1. คำนวณยอดเงินแต่ละกองทุน (รองรับ inc, exp, transfer)
     var fc = $("fundCards"); fc.textContent = "";
-    var rows = FK.map(function(k){
+    var rows = S.fundList.map(function(f){
+      var k = f.id;
       var tot = 0, mi = 0, me = 0;
       S.tx.forEach(function(t){
         var inMonth = ((t.date || "").slice(0,7) === key);
@@ -982,12 +1166,13 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
     var allTot = rows.reduce(function(s, r){ return s + r.tot; }, 0);
     var maxTot = Math.max.apply(null, rows.map(function(r){ return r.tot; }));
-    var medals = ["🥇", "🥈", "🥉"];
+    var medals = ["🥇", "🥈", "🥉", "🏅", "🎖️", "⭐", "💎"];
     S.shown = S.shown || {}; S.pct = S.pct || {};
 
     rows.forEach(function(r, i){
       var c = el("div", "fcard" + (S.fund === r.k ? " on" : "")), l = el("div", "fl");
-      l.appendChild(el("div", "fn", medals[i] + " " + fname(r.k)));
+      var medal = medals[i] || "🔹";
+      l.appendChild(el("div", "fn", medal + " " + fname(r.k)));
       var sm = el("div", "fs");
       sm.appendChild(document.createTextNode("เดือนนี้ "));
       sm.appendChild(el("span", "inc", "+" + fmt(r.mi)));
@@ -1092,7 +1277,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
         type: "settle",
         amount: amt,
         by: whoPaid,
-        fund: S.fund !== "all" ? S.fund : "f1",
+        fund: S.fund !== "all" ? S.fund : (S.fundList[0] ? S.fundList[0].id : "f1"),
         note: "เคลียร์ยอดหารบิล",
         date: ymd(new Date()),
         ts: Date.now()
@@ -1496,11 +1681,18 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
     col("members").doc(S.name).set({name: S.name, ts: Date.now()}).catch(function(){});
 
-    // 1. Funds setting
+    // 1. Funds setting (รองรับทั้ง Array list ใหม่และ Key-Value เดิม)
     S.unsub.push(col("settings").doc("funds").onSnapshot(function(d){
       if(d.exists){
         var v = d.data();
-        FK.forEach(function(k){ if(v[k]) S.funds[k] = v[k]; });
+        if(Array.isArray(v.list) && v.list.length > 0){
+          S.fundList = v.list;
+        } else {
+          var keys = Object.keys(v).filter(function(k){ return k !== "list"; });
+          if(keys.length > 0){
+            S.fundList = keys.map(function(k){ return { id: k, name: v[k] || "กองทุน" }; });
+          }
+        }
       }
       fillFunds(); render();
     }, function(){}));
@@ -1516,25 +1708,36 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       renderCategoryTags();
     }, function(){}));
 
-    // 3. Members
+    // 3. Custom Quick Tags
+    S.unsub.push(col("settings").doc("quickTags").onSnapshot(function(d){
+      if(d.exists){
+        var v = d.data();
+        if(Array.isArray(v.list) && v.list.length > 0){
+          S.quickTags = v.list;
+          renderQuickTags();
+        }
+      }
+    }, function(){}));
+
+    // 4. Members
     S.unsub.push(col("members").onSnapshot(function(sn){
       S.members = sn.docs.map(function(d){ return d.id; });
     }, function(){}));
 
-    // 4. Goals
+    // 5. Goals
     S.unsub.push(col("goals").onSnapshot(function(sn){
       S.goals = sn.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; });
       renderGoals();
     }, function(){}));
 
-    // 5. Transactions
+    // 6. Transactions
     S.unsub.push(col("tx").onSnapshot(function(sn){
       S.tx = sn.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; })
         .sort(function(a,b){ return (b.date || "").localeCompare(a.date || "") || b.ts - a.ts; });
       render();
     }, function(e){ showErr("อ่านข้อมูลไม่ได้: " + e.message); }));
 
-    // 6. Logs & Notifications
+    // 7. Logs & Notifications
     S.unsub.push(col("logs").orderBy("ts", "desc").limit(100).onSnapshot(function(sn){
       var first = !S.logsReady; S.logsReady = true;
       S.logs = sn.docs.map(function(d){ return d.data(); });
@@ -1564,7 +1767,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   $("cfgBtn").onclick = function(){
     $("sName").value = S.name; $("sRoom").value = S.room;
     S.unsub.forEach(function(u){ u(); }); S.unsub = [];
-    show("setup"); refreshNoti(); renderCategoryTags();
+    show("setup"); refreshNoti(); renderCategoryTags(); renderFundEditor();
   };
 
   // เริ่มต้นระบบ
