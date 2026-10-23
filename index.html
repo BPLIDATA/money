@@ -114,6 +114,30 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 .pending-req-box .btn-yes{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
 .pending-req-box .btn-no{background:var(--soft);color:var(--exp);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer}
 
+/* Sub-funds (หัวข้อย่อ / กระเป๋าย่อย & พับเก็บ) */
+.subfunds-box{margin-top:6px;border-top:1px dashed var(--bd);padding-top:8px}
+.subfunds-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--bg);border:1px solid var(--bd);padding:7px 10px;font-size:12px;font-weight:700;color:var(--pri);cursor:pointer;border-radius:8px;transition:all .15s}
+.subfunds-toggle:hover{background:var(--soft);border-color:var(--pri)}
+.fund-summary-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px}
+.fund-summary-tit{font-size:13px;font-weight:700;color:var(--mut);display:flex;align-items:center;gap:6px}
+.fund-toggle-all{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;color:var(--tx);cursor:pointer;transition:all .15s}
+.fund-toggle-all:hover{background:var(--soft);color:var(--pri)}
+.subfunds-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.subfund-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;cursor:pointer;transition:all .15s}
+.subfund-item:hover{border-color:var(--pri)}
+.subfund-item.on{border-color:var(--pri);background:var(--soft);box-shadow:0 0 0 1.5px var(--pri)}
+.subfund-name{font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px}
+.subfund-stat{font-size:11px;color:var(--mut);margin-top:2px}
+.subfund-amt{font-size:14px;font-weight:800;text-align:right;white-space:nowrap}
+.subfund-amt.mut{color:var(--mut)}
+.subfund-amt small{display:block;font-size:10px;font-weight:400;color:var(--mut)}
+.subfund-editor-card{margin-left:18px;border-left:3.5px solid var(--pri)!important;background:var(--card)!important}
+.badge-subfund{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--soft);color:var(--pri);display:inline-flex;align-items:center;gap:4px}
+.filter-active-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 12px;margin-bottom:10px;border-radius:10px;background:var(--soft);border:1px solid var(--pri);font-size:13px;color:var(--pri);font-weight:600}
+.filter-active-bar button{background:none;border:0;color:var(--pri);font-size:13px;font-weight:700;cursor:pointer;padding:2px 8px;border-radius:6px}
+.filter-active-bar button:hover{background:rgba(15,118,110,0.15)}
+
+
 /* Split Card */
 .split-box{background:linear-gradient(135deg,rgba(217,119,6,.1),var(--card));border:1.5px solid var(--warn);border-radius:14px;padding:13px;margin-bottom:12px}
 .split-box b{font-size:15px;color:var(--warn);display:flex;align-items:center;gap:6px}
@@ -216,9 +240,13 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     <div class="card">
       <div class="row" style="margin-bottom:6px">
         <b>🏦 กองทุน / กระเป๋าเงิน</b>
-        <button type="button" class="mini" id="addFundBtn" style="background:var(--soft);color:var(--pri);font-weight:700">+ เพิ่มกองทุนใหม่</button>
+        <div style="display:flex;gap:4px">
+          <button type="button" class="mini" id="autoGroupFundsBtn" style="background:var(--soft);color:var(--pri);font-weight:700" title="จัดกระเป๋าและหุ้นเข้าหาผู้ดูแล (แก๊ส/น้ำ/กองกลาง) อัตโนมัติ">⚡ จัดกลุ่มตามคนดูแล</button>
+          <button type="button" class="mini" id="addFundBtn" style="background:var(--soft);color:var(--pri);font-weight:700">+ เพิ่มกองทุนใหม่</button>
+        </div>
       </div>
-      <div class="hint" style="margin-bottom:10px">สามารถเพิ่มกระเป๋าเงินได้ไม่จำกัด เช่น “ของแก๊ส”, “ของน้ำ”, “ของร้าน/กองกลาง”, “เงินสด”, “บัตรเครดิต”</div>
+      <div class="hint" style="margin-bottom:10px">สามารถย้ายกองทุนหรือหุ้นไปย่ออยู่ใต้ผู้ดูแลแต่ละคน (ของแก๊ส, ของน้ำ, กองกลาง) เพื่อลดความยาวแถวในหน้าหลักได้</div>
+      
       <div id="fundListEditor" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
       <button class="mini" id="fnSave">บันทึกชื่อกองทุนทั้งหมด</button>
     </div>
@@ -279,6 +307,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
         <input id="searchTx" placeholder="🔍 ค้นหาโน้ต, หัวข้อ...">
         <select id="filterCat"><option value="all">ทุกหัวข้อ</option></select>
       </div>
+      <div id="activeFundFilterBox" class="hide"></div>
       <div class="card"><div id="list"></div></div>
     </div>
 
@@ -529,7 +558,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 <script src="config.js"></script>
 <script>
 (function(){
-  var APP_VERSION = "2.6";
+  var APP_VERSION = "2.9";
   var $ = function(i){ return document.getElementById(i); };
   var TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   var DEFAULT_CATS = {
@@ -594,8 +623,92 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function fdate(s){ var p=(s||"").split("-"); return p.length===3 ? (+p[2])+" "+TH[+p[1]-1]+" "+(+p[0]+543) : s; }
   function who(n){ return n === S.name ? "คุณ" : (n || "แฟน"); }
-  function fname(k){ return S.funds[k || "f1"] || "กองทุน"; }
-  function fundOf(t){ return t.fund || (S.fundList[0] ? S.fundList[0].id : "f1"); }
+  // ค้นหากองทุนจาก id หรือ ชื่อกองทุน (รองรับความเข้ากันได้ 100%)
+  function findFund(idOrName){
+    if(!idOrName) return null;
+    return S.fundList.find(function(f){ return f.id === idOrName || f.name === idOrName; }) || null;
+  }
+
+  // แปลง id หรือชื่อ ให้เป็น canonical id เสมอ
+  function resolveFundId(idOrName){
+    if(!idOrName) return S.fundList[0] ? S.fundList[0].id : "f1";
+    var f = findFund(idOrName);
+    return f ? f.id : idOrName;
+  }
+
+  // ตรวจสอบความสัมพันธ์กองทุนแม่-ลูก (รองรับทั้ง id และ name)
+  function isParentOf(parent, child){
+    if(!parent || !child || !child.parentId) return false;
+    return child.parentId === parent.id || child.parentId === parent.name;
+  }
+
+  function fname(k){
+    if(!k) return "กองทุน";
+    if(k.endsWith && k.endsWith(":main")){
+      var base = k.replace(":main", "");
+      var baseF = findFund(base);
+      return (baseF ? baseF.name : (S.funds[base] || "กองทุน")) + " (กระเป๋าหลัก)";
+    }
+    var f = findFund(k);
+    if(f){
+      if(f.parentId){
+        var parent = findFund(f.parentId);
+        return (parent ? parent.name + " › " : "") + f.name;
+      }
+      return f.name;
+    }
+    return S.funds[k] || k || "กองทุน";
+  }
+
+  function fnameShort(k){
+    if(!k) return "กองทุน";
+    if(k.endsWith && k.endsWith(":main")){
+      var base = k.replace(":main", "");
+      var baseF = findFund(base);
+      return (baseF ? baseF.name : (S.funds[base] || "กองทุน")) + " (หลัก)";
+    }
+    var f = findFund(k);
+    return f ? f.name : (S.funds[k] || k || "กองทุน");
+  }
+
+  function fundMatchesFilter(t, filterId){
+    if(!filterId || filterId === "all") return true;
+    var tFund = fundOf(t);
+    var tTo = t.toFund ? resolveFundId(t.toFund) : null;
+    if(filterId.endsWith && filterId.endsWith(":main")){
+      var baseId = resolveFundId(filterId.replace(":main", ""));
+      return tFund === baseId || tTo === baseId;
+    }
+    var canonFilter = resolveFundId(filterId);
+    var isChild = S.fundList.some(function(x){ return x.id === canonFilter && x.parentId; });
+    if(isChild){
+      return tFund === canonFilter || tTo === canonFilter;
+    }
+    if(tFund === canonFilter || tTo === canonFilter) return true;
+    var childIds = S.fundList.filter(function(x){ return isParentOf(findFund(canonFilter), x); }).map(function(x){ return x.id; });
+    return childIds.indexOf(tFund) !== -1 || (tTo && childIds.indexOf(tTo) !== -1);
+  }
+
+  function fundFilterLabel(filterId){
+    if(!filterId || filterId === "all") return "ทุกกองทุน";
+    if(filterId.endsWith && filterId.endsWith(":main")){
+      var base = filterId.replace(":main", "");
+      var baseF = findFund(base);
+      return (baseF ? baseF.name : fname(base)) + " (เฉพาะกระเป๋าหลัก)";
+    }
+    var canon = resolveFundId(filterId);
+    var f = findFund(canon);
+    if(f && f.parentId){
+      return fname(f.id);
+    }
+    var hasChildren = S.fundList.some(function(x){ return isParentOf(f, x); });
+    return fname(canon) + (hasChildren ? " (รวมกระเป๋าย่อย)" : "");
+  }
+
+  function fundOf(t){
+    var fVal = t ? (t.fund || (S.fundList[0] ? S.fundList[0].id : "f1")) : "f1";
+    return resolveFundId(fVal);
+  }
 
   // สิทธิ์เจ้าของกองทุน & การจัดการ
   function isGas(name){
@@ -607,7 +720,6 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     return n === "น้ำ" || n === "nam" || n === "แฟน";
   }
 
-  // สิทธิ์ของแก๊สและการยืนยันตัวตนเครื่อง (เปิดสลับได้แค่แก๊สเท่านั้น ของแฟนจะไม่มี)
   function isGasDevice(){
     var dev = ls("m_gas_dev");
     if(dev === "1") return true;
@@ -649,19 +761,26 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     }
   }
   function getFundOwner(fundId){
-    var f = S.fundList.find(function(x){ return x.id === fundId; });
+    var baseId = resolveFundId(fundId);
+    var f = findFund(baseId);
     if(f && f.owner) return f.owner;
+    if(f && f.parentId){
+      var p = findFund(f.parentId);
+      if(p && p.owner) return p.owner;
+    }
     var nm = (f && f.name || "").toLowerCase();
-    if(fundId === "f1" || nm.indexOf("แก๊ส") !== -1 || nm.indexOf("gas") !== -1) return "แก๊ส";
-    if(fundId === "f2" || nm.indexOf("น้ำ") !== -1 || nm.indexOf("nam") !== -1 || nm.indexOf("แฟน") !== -1) return "น้ำ";
+    if(baseId === "f1" || nm.indexOf("แก๊ส") !== -1 || nm.indexOf("gas") !== -1) return "แก๊ส";
+    if(baseId === "f2" || nm.indexOf("น้ำ") !== -1 || nm.indexOf("nam") !== -1 || nm.indexOf("แฟน") !== -1) return "น้ำ";
     return "";
   }
+
   function isMyFund(fundId){
-    var owner = getFundOwner(fundId);
+    var baseId = resolveFundId(fundId);
+    var owner = getFundOwner(baseId);
     if(!owner || owner === "all") return true; // กองกลาง ทุกคนจัดการได้
-    var myName = S.name || "";
+    var myName = (S.name || "").trim();
     if(owner === myName) return true;
-    if(isGas(owner) && isGas(myName)) return true;
+    if(isGas(owner) && (isGas(myName) || isGasDevice())) return true;
     if(isPartner(owner) && (isPartner(myName) || (!isGas(myName) && myName !== ""))) return true;
     return false;
   }
@@ -677,20 +796,34 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
   // ระบบปิดยอดเงิน (xxxx) และขอสิทธิ์ดูยอด 1 วัน
   function isFundHidden(fundId){
-    if(S.privacy && S.privacy[fundId] && typeof S.privacy[fundId].hidden === "boolean"){
-      return S.privacy[fundId].hidden;
+    var baseId = resolveFundId(fundId);
+    if(S.privacy && S.privacy[baseId] && typeof S.privacy[baseId].hidden === "boolean"){
+      return S.privacy[baseId].hidden;
     }
-    var f = S.fundList.find(function(x){ return x.id === fundId; });
+    var f = findFund(baseId);
     if(f && typeof f.hideBalance === "boolean") return f.hideBalance;
-    var owner = getFundOwner(fundId);
-    return owner && owner !== "all"; // บัญชีส่วนตัวเริ่มต้นปิดยอดเป็น xxxx (จะเปิดหรือปิดก็ได้แล้วแต่คน)
+    if(f && f.parentId){
+      return isFundHidden(f.parentId);
+    }
+    var owner = getFundOwner(baseId);
+    return owner && owner !== "all";
   }
+
   function isFundMasked(fundId){
-    if(!isFundHidden(fundId)) return false;
-    if(isMyFund(fundId)) return false; // เจ้าของเห็นยอดเงินตัวเองเสมอ
-    var p = (S.privacy && S.privacy[fundId]) || {};
+    var baseId = resolveFundId(fundId);
+    if(!isFundHidden(baseId)) return false;
+    if(isMyFund(baseId)) return false; // เจ้าของเห็นยอดเงินตัวเองเสมอ
+    var p = (S.privacy && S.privacy[baseId]) || {};
     if(p.viewGrantedUntil && Date.now() < p.viewGrantedUntil){
       return false; // ได้รับสิทธิ์ดูยอด 1 วันที่ยังไม่หมดอายุ
+    }
+    var f = findFund(baseId);
+    if(f && f.parentId){
+      var parentId = resolveFundId(f.parentId);
+      var pp = (S.privacy && S.privacy[parentId]) || {};
+      if(pp.viewGrantedUntil && Date.now() < pp.viewGrantedUntil){
+        return false;
+      }
     }
     return true; // ซ่อนยอดเป็น xxxx
   }
@@ -710,10 +843,11 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   }
 
   async function updateFundPrivacy(fundId, patch){
-    var cur = (S.privacy && S.privacy[fundId]) ? Object.assign({}, S.privacy[fundId]) : {};
+    var baseId = resolveFundId(fundId);
+    var cur = (S.privacy && S.privacy[baseId]) ? Object.assign({}, S.privacy[baseId]) : {};
     var updated = Object.assign(cur, patch);
     var payload = {};
-    payload[fundId] = updated;
+    payload[baseId] = updated;
     await col("settings").doc("privacy").set(payload, { merge: true });
   }
 
@@ -728,7 +862,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       await updateFundPrivacy(fundId, patch);
       await col("logs").add({
         action: "privacy_toggle",
-        fundId: fundId,
+        fundId: resolveFundId(fundId),
         hidden: hidden,
         by: S.name,
         ts: Date.now()
@@ -749,7 +883,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       });
       await col("logs").add({
         action: "privacy_req",
-        fundId: fundId,
+        fundId: resolveFundId(fundId),
         by: S.name || "แฟน",
         ts: Date.now()
       });
@@ -763,7 +897,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   async function grantViewFund(fundId, ev){
     if(ev) ev.stopPropagation();
     try {
-      var grantUntil = Date.now() + 24 * 60 * 60 * 1000; // 24 ชั่วโมง (1 วัน)
+      var grantUntil = Date.now() + 24 * 60 * 60 * 1000;
       await updateFundPrivacy(fundId, {
         requestPending: false,
         viewGrantedUntil: grantUntil,
@@ -772,7 +906,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       });
       await col("logs").add({
         action: "privacy_grant",
-        fundId: fundId,
+        fundId: resolveFundId(fundId),
         by: S.name,
         grantUntil: grantUntil,
         ts: Date.now()
@@ -805,6 +939,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       showErr("ปิดยอดเงินไม่สำเร็จ: " + (e && e.message || e));
     }
   }
+
   function showErr(m){ var e=$("err"); e.textContent=m; e.classList.remove("hide"); }
   function clearErr(){ $("err").classList.add("hide"); }
 
@@ -942,83 +1077,13 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
   $("eSaveInlineCat").onclick = submitEditInlineCat;
   $("eInlineCatName").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); submitEditInlineCat(); } };
 
-  // 2. จัดการกองทุน / กระเป๋าเงิน (Dynamic Funds & Ownership)
-  function renderFundEditor(){
-    var box = $("fundListEditor"); if(!box) return;
-    box.textContent = "";
-    S.fundList.forEach(function(f, idx){
-      var r = el("div", null);
-      r.style.display = "flex"; r.style.flexDirection = "column"; r.style.gap = "6px";
-      r.style.padding = "10px"; r.style.border = "1px solid var(--bd)"; r.style.borderRadius = "10px";
-      r.style.background = "var(--soft)";
-
-      var topRow = el("div", null);
-      topRow.style.display = "flex"; topRow.style.gap = "6px"; topRow.style.alignItems = "center";
-
-      var inp = el("input", null);
-      inp.type = "text"; inp.value = f.name; inp.maxLength = 25;
-      inp.placeholder = "ชื่อกองทุนที่ " + (idx + 1);
-      inp.style.marginBottom = "0";
-      inp.oninput = function(){ f.name = this.value; };
-      topRow.appendChild(inp);
-
-      if(S.fundList.length > 1){
-        var delBtn = el("button", "del", "ลบ");
-        delBtn.type = "button";
-        delBtn.onclick = function(){
-          if(confirm("ต้องการลบกองทุน '" + f.name + "' หรือไม่?")){
-            S.fundList.splice(idx, 1);
-            renderFundEditor();
-          }
-        };
-        topRow.appendChild(delBtn);
-      }
-      r.appendChild(topRow);
-
-      var botRow = el("div", null);
-      botRow.style.display = "flex"; botRow.style.gap = "8px"; botRow.style.alignItems = "center";
-      botRow.style.fontSize = "13px"; botRow.style.flexWrap = "wrap";
-
-      var lblOwner = el("span", null, "สิทธิ์เจ้าของ:");
-      lblOwner.style.fontWeight = "600";
-      botRow.appendChild(lblOwner);
-
-      var selOwner = el("select", null);
-      selOwner.style.width = "auto"; selOwner.style.marginBottom = "0"; selOwner.style.padding = "6px 8px"; selOwner.style.fontSize = "13px";
-      var optGas = el("option", null, "แก๊ส (เฉพาะแก๊สจัดการ)"); optGas.value = "แก๊ส";
-      var optNam = el("option", null, "แฟน/น้ำ (เฉพาะแฟนจัดการ)"); optNam.value = "น้ำ";
-      var optAll = el("option", null, "กองกลาง (ทุกคนจัดการได้)"); optAll.value = "all";
-      selOwner.appendChild(optGas); selOwner.appendChild(optNam); selOwner.appendChild(optAll);
-      selOwner.value = f.owner || getFundOwner(f.id) || "all";
-      selOwner.onchange = function(){ f.owner = this.value; };
-      botRow.appendChild(selOwner);
-
-      var hideLbl = el("label", "cb");
-      hideLbl.style.margin = "0"; hideLbl.style.fontSize = "13px";
-      var hideCb = el("input");
-      hideCb.type = "checkbox";
-      hideCb.checked = isFundHidden(f.id);
-      hideCb.onchange = function(){ f.hideBalance = this.checked; };
-      hideLbl.appendChild(hideCb);
-      hideLbl.appendChild(document.createTextNode("ปิดยอดเริ่มต้น (xxxx)"));
-      botRow.appendChild(hideLbl);
-
-      r.appendChild(botRow);
-      box.appendChild(r);
-    });
-  }
-
-  $("addFundBtn").onclick = function(){
-    var newId = "f_" + Date.now();
-    S.fundList.push({ id: newId, name: "กองทุนใหม่ " + (S.fundList.length + 1), owner: "all", hideBalance: false });
-    renderFundEditor();
-  };
-
-  $("fnSave").onclick = function(){
+  // บันทึกกองทุนลง Firestore ทันทีที่แก้ไข
+  function saveFundsToFirestore(cb){
     if(!S.db || !S.room) return;
     S.fundList.forEach(function(f, i){
-      f.name = (f.name || "").trim() || ("กองทุน " + (i + 1));
+      f.name = (f.name || "").trim() || (f.parentId ? ("กระเป๋าย่อย " + (i + 1)) : ("กองทุน " + (i + 1)));
       if(!f.owner) f.owner = getFundOwner(f.id);
+      if(!f.parentId) delete f.parentId;
     });
     var d = { list: S.fundList };
     S.fundList.forEach(function(f){ d[f.id] = f.name; });
@@ -1032,92 +1097,269 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       col("settings").doc("funds").set(d),
       Object.keys(privacyUpd).length ? col("settings").doc("privacy").set(privacyUpd, { merge: true }) : Promise.resolve()
     ]).then(function(){
-      toast("✓ บันทึกกองทุนเรียบร้อยแล้ว");
       fillFunds(); render();
+      if(cb) cb();
     }).catch(function(e){ showErr("บันทึกกองทุนไม่สำเร็จ: " + e.message); });
+  }
+
+  // 2. จัดการกองทุน / กระเป๋าเงิน (Dynamic Funds, Sub-funds & Ownership)
+  function renderFundEditor(){
+    var box = $("fundListEditor"); if(!box) return;
+    box.textContent = "";
+
+    var mainFunds = S.fundList.filter(function(f){
+      if(!f.parentId) return true;
+      var p = findFund(f.parentId);
+      return !p || p.id === f.id;
+    });
+
+    function renderOneFundRow(f, isSubFund, parentObj){
+      var r = el("div", isSubFund ? "subfund-editor-card" : null);
+      r.style.display = "flex"; r.style.flexDirection = "column"; r.style.gap = "6px";
+      r.style.padding = "10px"; r.style.border = "1px solid var(--bd)"; r.style.borderRadius = "10px";
+      r.style.background = isSubFund ? "var(--card)" : "var(--soft)";
+
+      var topRow = el("div", null);
+      topRow.style.display = "flex"; topRow.style.gap = "6px"; topRow.style.alignItems = "center";
+
+      if(isSubFund){
+        var badge = el("span", "badge-subfund", "↳ 📂 ย่ออยู่ใต้ " + (parentObj ? parentObj.name : "กองทุนหลัก"));
+        topRow.appendChild(badge);
+      } else {
+        var badgeM = el("span", "badge-owner", "🏦 ผู้ดูแล/กองทุนหลัก");
+        topRow.appendChild(badgeM);
+      }
+
+      var inp = el("input", null);
+      inp.type = "text"; inp.value = f.name; inp.maxLength = 25;
+      inp.placeholder = isSubFund ? "เช่น หุ้น Dime, พอร์ตออมทอง..." : "ชื่อผู้ดูแล/กองทุนหลัก เช่น ของแก๊ส, ของน้ำ...";
+      inp.style.marginBottom = "0";
+      inp.oninput = function(){ f.name = this.value; };
+      inp.onchange = function(){ saveFundsToFirestore(); };
+      topRow.appendChild(inp);
+
+      if(S.fundList.length > 1){
+        var delBtn = el("button", "del", "ลบ");
+        delBtn.type = "button";
+        delBtn.onclick = function(){
+          var hasChildren = S.fundList.some(function(x){ return isParentOf(f, x); });
+          var msg = "ต้องการลบกองทุน '" + (f.name || "นี้") + "' หรือไม่?";
+          if(hasChildren) msg += "\n(กองทุนย่อยที่อยู่ข้างในจะเปลี่ยนเป็นกองทุนหลัก)";
+          if(confirm(msg)){
+            var idx = S.fundList.indexOf(f);
+            if(idx !== -1) S.fundList.splice(idx, 1);
+            S.fundList.forEach(function(x){ if(isParentOf(f, x)) delete x.parentId; });
+            saveFundsToFirestore(function(){ toast("ลบกองทุนเรียบร้อยแล้ว"); });
+          }
+        };
+        topRow.appendChild(delBtn);
+      }
+      r.appendChild(topRow);
+
+      var botRow = el("div", null);
+      botRow.style.display = "flex"; botRow.style.gap = "8px"; botRow.style.alignItems = "center";
+      botRow.style.fontSize = "13px"; botRow.style.flexWrap = "wrap";
+
+      var lblParent = el("span", null, "ย้ายไปย่ออยู่ใต้:");
+      lblParent.style.fontWeight = "600";
+      botRow.appendChild(lblParent);
+
+      var selParent = el("select", null);
+      selParent.style.width = "auto"; selParent.style.marginBottom = "0"; selParent.style.padding = "6px 8px"; selParent.style.fontSize = "13px";
+      var optNone = el("option", null, "🏢 เป็นกองทุนหลัก (แสดงเป็นการ์ดแยก)");
+      optNone.value = "";
+      selParent.appendChild(optNone);
+
+      // Any other fund can be chosen as parent
+      S.fundList.forEach(function(mf){
+        if(mf.id !== f.id && !mf.parentId){
+          var optP = el("option", null, "↳ ย่ออยู่ใต้: " + mf.name + " (" + (getFundOwner(mf.id) || "กองกลาง") + ")");
+          optP.value = mf.id;
+          selParent.appendChild(optP);
+        }
+      });
+      selParent.value = f.parentId ? resolveFundId(f.parentId) : "";
+      selParent.onchange = function(){
+        var previousParentId = f.parentId ? resolveFundId(f.parentId) : "";
+        var nextParentId = this.value ? resolveFundId(this.value) : "";
+        if(nextParentId === f.id){
+          toast("⚠️ ไม่สามารถย่อกองทุนไว้ใต้ตัวเองได้");
+          this.value = previousParentId;
+          return;
+        }
+        if(nextParentId){
+          var targetP = findFund(nextParentId);
+          f.parentId = targetP ? targetP.id : nextParentId;
+          if(targetP && targetP.owner) f.owner = targetP.owner;
+        } else {
+          delete f.parentId;
+        }
+        saveFundsToFirestore(function(){
+          fillFunds();
+          renderFundEditor();
+          toast("✓ ย้าย '" + f.name + "' สำเร็จแล้ว รายการเดิมยังผูกกับกองทุนนี้อยู่");
+        });
+      };
+      botRow.appendChild(selParent);
+
+      var lblOwner = el("span", null, "สิทธิ์คนดูแล:");
+      lblOwner.style.fontWeight = "600";
+      botRow.appendChild(lblOwner);
+
+      var selOwner = el("select", null);
+      selOwner.style.width = "auto"; selOwner.style.marginBottom = "0"; selOwner.style.padding = "6px 8px"; selOwner.style.fontSize = "13px";
+      var optGas = el("option", null, "แก๊ส"); optGas.value = "แก๊ส";
+      var optNam = el("option", null, "แฟน/น้ำ"); optNam.value = "น้ำ";
+      var optAll = el("option", null, "กองกลาง"); optAll.value = "all";
+      selOwner.appendChild(optGas); selOwner.appendChild(optNam); selOwner.appendChild(optAll);
+      selOwner.value = f.owner || getFundOwner(f.id) || "all";
+      selOwner.onchange = function(){
+        f.owner = this.value;
+        saveFundsToFirestore();
+      };
+      botRow.appendChild(selOwner);
+
+      var hideLbl = el("label", "cb");
+      hideLbl.style.margin = "0"; hideLbl.style.fontSize = "13px";
+      var hideCb = el("input");
+      hideCb.type = "checkbox";
+      hideCb.checked = isFundHidden(f.id);
+      hideCb.onchange = function(){
+        f.hideBalance = this.checked;
+        saveFundsToFirestore();
+      };
+      hideLbl.appendChild(hideCb);
+      hideLbl.appendChild(document.createTextNode("ปิดยอด xxxx"));
+      botRow.appendChild(hideLbl);
+
+      r.appendChild(botRow);
+
+      if(!isSubFund){
+        var actRow = el("div", null);
+        actRow.style.display = "flex"; actRow.style.justifyContent = "flex-end"; actRow.style.marginTop = "2px";
+        var addSubBtn = el("button", "mini", "+ เพิ่มกองทุนย่อใต้ " + (f.name || "นี้"));
+        addSubBtn.type = "button";
+        addSubBtn.style.fontSize = "12px"; addSubBtn.style.padding = "5px 10px";
+        addSubBtn.style.background = "var(--card)"; addSubBtn.style.color = "var(--pri)"; addSubBtn.style.fontWeight = "700";
+        addSubBtn.onclick = function(){
+          var newId = "f_" + Date.now();
+          S.fundList.push({
+            id: newId,
+            name: "",
+            parentId: f.id,
+            owner: f.owner || getFundOwner(f.id) || "all",
+            hideBalance: isFundHidden(f.id)
+          });
+          renderFundEditor();
+        };
+        actRow.appendChild(addSubBtn);
+        r.appendChild(actRow);
+      }
+
+      box.appendChild(r);
+    }
+
+    mainFunds.forEach(function(mf){
+      renderOneFundRow(mf, false, null);
+      var children = S.fundList.filter(function(c){ return c.id !== mf.id && isParentOf(mf, c); });
+      children.forEach(function(cf){
+        renderOneFundRow(cf, true, mf);
+      });
+    });
+  }
+
+  // ปุ่มจัดกลุ่มตามคนดูแลอัตโนมัติ (แก๊ส / น้ำ / กองกลาง)
+  function autoGroupFunds(){
+    var gasParent = S.fundList.find(function(f){ return f.id === "f1" || isGas(f.owner) || (f.name && (f.name.indexOf("แก๊ส") !== -1 || f.name.indexOf("gas") !== -1)); });
+    var namParent = S.fundList.find(function(f){ return (f.id === "f2" || isPartner(f.owner) || (f.name && (f.name.indexOf("น้ำ") !== -1 || f.name.indexOf("nam") !== -1))) && f !== gasParent; });
+    var shopParent = S.fundList.find(function(f){ return (f.id === "shop" || f.owner === "all" || (f.name && (f.name.indexOf("ร้าน") !== -1 || f.name.indexOf("กองกลาง") !== -1))) && f !== gasParent && f !== namParent; });
+
+    var changed = 0;
+    S.fundList.forEach(function(f){
+      if(f === gasParent || f === namParent || f === shopParent) {
+        delete f.parentId;
+        return;
+      }
+      var owner = getFundOwner(f.id);
+      if(isGas(owner) && gasParent){
+        if(f.parentId !== gasParent.id){ f.parentId = gasParent.id; changed++; }
+      } else if(isPartner(owner) && namParent){
+        if(f.parentId !== namParent.id){ f.parentId = namParent.id; changed++; }
+      } else if(owner === "all" && shopParent){
+        if(f.parentId !== shopParent.id){ f.parentId = shopParent.id; changed++; }
+      }
+    });
+
+    saveFundsToFirestore(function(){
+      toast("✓ จัดกลุ่ม " + changed + " กองทุนย่อเข้าหาผู้ดูแลเรียบร้อยแล้ว");
+    });
+  }
+  var autoGrpBtn = $("autoGroupFundsBtn");
+  if(autoGrpBtn) autoGrpBtn.onclick = autoGroupFunds;
+
+  $("addFundBtn").onclick = function(){
+    var newId = "f_" + Date.now();
+    S.fundList.push({ id: newId, name: "กองทุนใหม่ " + (S.fundList.length + 1), owner: "all", hideBalance: false });
+    renderFundEditor();
+  };
+
+  $("fnSave").onclick = function(){
+    saveFundsToFirestore(function(){
+      toast("✓ บันทึกกองทุนเรียบร้อยแล้ว");
+    });
   };
 
   function fillFunds(){
     S.funds = {};
     S.fundList.forEach(function(f){ S.funds[f.id] = f.name; });
 
-    var myFunds = S.fundList.filter(function(f){ return isMyFund(f.id); });
-    var defaultFundId = myFunds[0] ? myFunds[0].id : (S.fundList[0] ? S.fundList[0].id : "f1");
-    var cur = $("fFund").value;
+    function buildFundOptions(selectEl, selectedVal, filterAllowed){
+      if(!selectEl) return;
+      selectEl.textContent = "";
+
+      var mainFunds = S.fundList.filter(function(f){
+        return !f.parentId || !S.fundList.some(function(p){ return p.id === f.parentId; });
+      });
+
+      mainFunds.forEach(function(mf){
+        var allowed = !filterAllowed || isMyFund(mf.id);
+        var owner = getFundOwner(mf.id);
+        var children = S.fundList.filter(function(c){ return c.parentId === mf.id; });
+
+        var label = (children.length > 0 ? "📁 " : "🏦 ") + mf.name + (allowed ? "" : " (เฉพาะ" + (owner || "เจ้าของ") + ")");
+        var o = el("option", null, label);
+        o.value = mf.id;
+        if(filterAllowed && !allowed) o.disabled = true;
+        selectEl.appendChild(o);
+
+        children.forEach(function(cf){
+          var cAllowed = !filterAllowed || isMyFund(cf.id);
+          var cOwner = getFundOwner(cf.id);
+          var cLabel = "   ↳ 📈 " + cf.name + (cAllowed ? "" : " (เฉพาะ" + (cOwner || "เจ้าของ") + ")");
+          var co = el("option", null, cLabel);
+          co.value = cf.id;
+          if(filterAllowed && !cAllowed) co.disabled = true;
+          selectEl.appendChild(co);
+        });
+      });
+
+      if(selectedVal && selectEl.querySelector('option[value="' + selectedVal + '"]:not(:disabled)')){
+        selectEl.value = selectedVal;
+      } else {
+        var firstValid = selectEl.querySelector('option:not(:disabled)');
+        if(firstValid) selectEl.value = firstValid.value;
+      }
+    }
+
+    var defaultFundId = (S.fundList.find(function(f){ return isMyFund(f.id); }) || S.fundList[0] || {id:"f1"}).id;
+    var cur = $("fFund") ? $("fFund").value : "";
     if(!cur || !isMyFund(cur)) cur = defaultFundId;
 
-    var sFund = $("fFund");
-    if(sFund){
-      sFund.textContent = "";
-      S.fundList.forEach(function(f){
-        var allowed = isMyFund(f.id);
-        var owner = getFundOwner(f.id);
-        var label = f.name + (allowed ? "" : " (เฉพาะ" + (owner || "เจ้าของ") + ")");
-        var o = el("option", null, label);
-        o.value = f.id;
-        if(!allowed) o.disabled = true;
-        sFund.appendChild(o);
-      });
-      sFund.value = cur;
-    }
-
-    var sFrom = $("fTrfFrom");
-    if(sFrom){
-      var curFrom = sFrom.value;
-      if(!curFrom || !isMyFund(curFrom)) curFrom = defaultFundId;
-      sFrom.textContent = "";
-      S.fundList.forEach(function(f){
-        var allowed = isMyFund(f.id);
-        var owner = getFundOwner(f.id);
-        var o = el("option", null, f.name + (allowed ? "" : " (เฉพาะ" + (owner || "เจ้าของ") + ")"));
-        o.value = f.id;
-        if(!allowed) o.disabled = true;
-        sFrom.appendChild(o);
-      });
-      sFrom.value = curFrom;
-    }
-
-    var sTo = $("fTrfTo");
-    if(sTo){
-      var curTo = sTo.value;
-      sTo.textContent = "";
-      S.fundList.forEach(function(f){
-        var o = el("option", null, f.name);
-        o.value = f.id;
-        sTo.appendChild(o);
-      });
-      if(curTo) sTo.value = curTo;
-      else if(S.fundList[1]) sTo.value = S.fundList[1].id;
-    }
-
-    var sEFund = $("eFund");
-    if(sEFund){
-      var curE = sEFund.value;
-      sEFund.textContent = "";
-      S.fundList.forEach(function(f){
-        var allowed = isMyFund(f.id);
-        var owner = getFundOwner(f.id);
-        var o = el("option", null, f.name + (allowed ? "" : " (เฉพาะ" + (owner || "เจ้าของ") + ")"));
-        o.value = f.id;
-        if(!allowed) o.disabled = true;
-        sEFund.appendChild(o);
-      });
-      if(curE) sEFund.value = curE;
-    }
-
-    var sDep = $("depFund");
-    if(sDep){
-      var curD = sDep.value;
-      sDep.textContent = "";
-      S.fundList.forEach(function(f){
-        var allowed = isMyFund(f.id);
-        var o = el("option", null, f.name);
-        o.value = f.id;
-        if(!allowed) o.disabled = true;
-        sDep.appendChild(o);
-      });
-      if(curD && isMyFund(curD)) sDep.value = curD; else sDep.value = defaultFundId;
-    }
+    buildFundOptions($("fFund"), cur, true);
+    buildFundOptions($("fTrfFrom"), $("fTrfFrom") ? $("fTrfFrom").value : cur, true);
+    buildFundOptions($("fTrfTo"), $("fTrfTo") ? $("fTrfTo").value : (S.fundList[1] ? S.fundList[1].id : ""), false);
+    buildFundOptions($("eFund"), $("eFund") ? $("eFund").value : cur, true);
+    buildFundOptions($("depFund"), $("depFund") ? $("depFund").value : cur, true);
 
     renderFundEditor();
   }
@@ -1608,42 +1850,106 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       }
     }
 
-    // 1. คำนวณยอดเงินแต่ละกองทุน (รองรับ inc, exp, transfer)
+    // 1. คำนวณยอดเงินแต่ละกองทุน (รองรับ inc, exp, transfer และกระเป๋าย่อย)
     var fc = $("fundCards"); fc.textContent = "";
-    var rows = S.fundList.map(function(f){
-      var k = f.id;
-      var tot = 0, mi = 0, me = 0;
-      S.tx.forEach(function(t){
-        var inMonth = ((t.date || "").slice(0,7) === key);
-        if(t.type === "inc" && fundOf(t) === k){
-          tot += t.amount; if(inMonth) mi += t.amount;
-        } else if(t.type === "exp" && fundOf(t) === k){
-          tot -= t.amount; if(inMonth) me += t.amount;
-        } else if(t.type === "transfer"){
-          if(t.fund === k){ tot -= t.amount; if(inMonth) me += t.amount; }
-          if(t.toFund === k){ tot += t.amount; if(inMonth) mi += t.amount; }
-        }
-      });
-      return {k: k, tot: tot, mi: mi, me: me};
+    var rawStats = {};
+    S.fundList.forEach(function(f){
+      rawStats[f.id] = { tot: 0, mi: 0, me: 0 };
     });
 
-    // จัดอันดับกองทุนตามยอดเงินคงเหลือสะสมมากไปน้อย
+    S.tx.forEach(function(t){
+      var inMonth = ((t.date || "").slice(0,7) === key);
+      var canonFund = fundOf(t);
+      var canonTo = t.toFund ? resolveFundId(t.toFund) : null;
+      var amt = Number(t.amount) || 0;
+
+      if(!rawStats[canonFund]) rawStats[canonFund] = { tot: 0, mi: 0, me: 0 };
+      if(canonTo && !rawStats[canonTo]) rawStats[canonTo] = { tot: 0, mi: 0, me: 0 };
+
+      if(t.type === "inc"){
+        rawStats[canonFund].tot += amt;
+        if(inMonth) rawStats[canonFund].mi += amt;
+      } else if(t.type === "exp"){
+        rawStats[canonFund].tot -= amt;
+        if(inMonth) rawStats[canonFund].me += amt;
+      } else if(t.type === "transfer"){
+        rawStats[canonFund].tot -= amt;
+        if(inMonth) rawStats[canonFund].me += amt;
+        if(canonTo){
+          rawStats[canonTo].tot += amt;
+          if(inMonth) rawStats[canonTo].mi += amt;
+        }
+      }
+    });
+
+    var mainFunds = S.fundList.filter(function(f){
+      if(!f.parentId) return true;
+      var p = findFund(f.parentId);
+      return !p || p.id === f.id;
+    });
+
+    var rows = mainFunds.map(function(mf){
+      var children = S.fundList.filter(function(c){ return c.id !== mf.id && isParentOf(mf, c); });
+      var combTot = rawStats[mf.id] ? rawStats[mf.id].tot : 0;
+      var combMi = rawStats[mf.id] ? rawStats[mf.id].mi : 0;
+      var combMe = rawStats[mf.id] ? rawStats[mf.id].me : 0;
+
+
+      return {
+        k: mf.id,
+        mainFund: mf,
+        children: children,
+        tot: combTot,
+        mi: combMi,
+        me: combMe,
+        ownTot: rawStats[mf.id] ? rawStats[mf.id].tot : 0,
+        ownMi: rawStats[mf.id] ? rawStats[mf.id].mi : 0,
+        ownMe: rawStats[mf.id] ? rawStats[mf.id].me : 0
+      };
+    });
+
     rows.sort(function(a, b){ return b.tot - a.tot; });
 
-    var allTot = rows.reduce(function(s, r){ return s + r.tot; }, 0);
+    var allTot = S.fundList.reduce(function(s, f){ return s + ((rawStats[f.id] && rawStats[f.id].tot) || 0); }, 0);
     var maxTot = Math.max.apply(null, rows.map(function(r){ return r.tot; }));
     var order = rows.map(function(r){ return r.k; }).join(",");
     var reorder = S.order && S.order !== order; S.order = order;
     var medals = ["🥇", "🥈", "🥉", "🏅", "🎖️", "⭐", "💎"];
     S.shown = S.shown || {}; S.pct = S.pct || {};
+    S.expandedFunds = S.expandedFunds || {};
+
+    // แถบควบคุมมุมมองด้านบน (ย่อทั้งหมด / ขยายทั้งหมด) ช่วยลดความยาวแถวทันที
+    var hasAnySub = rows.some(function(r){ return r.children.length > 0; });
+    if(hasAnySub){
+      var summaryBar = el("div", "fund-summary-bar");
+      var sumTit = el("div", "fund-summary-tit", "🏦 ผู้ดูแล & กองทุน (" + rows.length + " กลุ่ม)");
+      
+      var allExp = rows.every(function(r){ return r.children.length === 0 || S.expandedFunds[r.k] !== false; });
+      var togAllBtn = el("button", "fund-toggle-all", allExp ? "📁 ย่อเก็บทั้งหมด" : "📂 ขยายดูทุกกองทุน");
+      togAllBtn.type = "button";
+      togAllBtn.onclick = function(){
+        var targetState = !allExp;
+        rows.forEach(function(r){ S.expandedFunds[r.k] = targetState; });
+        render();
+      };
+      summaryBar.appendChild(sumTit); summaryBar.appendChild(togAllBtn);
+      fc.appendChild(summaryBar);
+    }
 
     rows.forEach(function(r, i){
+      var isSelected = (S.fund === r.k);
       var masked = isFundMasked(r.k);
-      var c = el("div", "fcard" + (i === 0 ? " top" : "") + (S.fund === r.k ? " on" : "") + (reorder ? " pop" : ""));
+      var c = el("div", "fcard" + (i === 0 ? " top" : "") + (isSelected ? " on" : "") + (reorder ? " pop" : ""));
       var topRow = el("div", "fcard-main");
       var l = el("div", "fl");
       var medal = medals[i] || "🔹";
-      l.appendChild(el("div", "fn", medal + " " + fname(r.k)));
+      
+      var titleText = medal + " " + r.mainFund.name;
+      if(r.children.length > 0){
+        titleText += " (" + (r.children.length + 1) + " บัญชี)";
+      }
+      l.appendChild(el("div", "fn", titleText));
+
       var sm = el("div", "fs");
       if(masked){
         sm.appendChild(document.createTextNode("เดือนนี้ "));
@@ -1667,7 +1973,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
       var rt = el("div", "fb " + (masked ? "mut" : (r.tot < 0 ? "exp" : "inc"))), num = el("span");
       rt.appendChild(num);
-      rt.appendChild(el("small", null, masked ? "ปิดยอดเงินไว้" : "คงเหลือ"));
+      rt.appendChild(el("small", null, masked ? "ปิดยอดเงินไว้" : (r.children.length > 0 ? "คงเหลือบัญชีหลัก" : "คงเหลือ")));
       if(masked){
         num.textContent = "xxxx ฿";
       } else {
@@ -1678,13 +1984,77 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       topRow.appendChild(l); topRow.appendChild(rt);
       c.appendChild(topRow);
 
+      // ส่วนหัวข้อย่อ / กระเป๋าย่อย (แสดงคลี่ออกมาให้เห็นชัดเจนทันที ไม่มียอดหาย)
+      if(r.children.length > 0){
+        var subBox = el("div", "subfunds-box");
+        var isExp = (S.expandedFunds[r.k] !== false); // ค่าเริ่มต้นกางออก เพื่อให้เห็นกองทุนย่อยและยอดเงินชัดเจน
+        
+        var previewNames = r.children.map(function(c){ return c.name; }).join(", ");
+        var togBtn = el("button", "subfunds-toggle");
+        togBtn.type = "button";
+        var togLeft = el("span", null, (isExp ? "▾ " : "▸ ") + "📂 กองทุนในความดูแล (" + (r.children.length + 1) + " บัญชี: " + r.mainFund.name + ", " + previewNames + ")");
+        var togRight = el("span", null, isExp ? "▴ ย่อเก็บ" : "แตะดูกองทุนย่อย ▾");
+        togRight.style.fontSize = "11px"; togRight.style.fontWeight = "600";
+        togBtn.appendChild(togLeft); togBtn.appendChild(togRight);
+
+        togBtn.onclick = function(e){
+          e.stopPropagation();
+          S.expandedFunds[r.k] = !isExp;
+          render();
+        };
+        subBox.appendChild(togBtn);
+
+        if(isExp){
+          var subList = el("div", "subfunds-list");
+          
+          // 2. กระเป๋าย่อยแต่ละอัน (เช่น หุ้นWeBull, หุ้นDime)
+          r.children.forEach(function(cFund){
+            var cMasked = isFundMasked(cFund.id);
+            var cs = rawStats[cFund.id] || { tot: 0, mi: 0, me: 0 };
+            var isChildSel = (S.fund === cFund.id);
+            var itemChild = el("div", "subfund-item" + (isChildSel ? " on" : ""));
+            
+            var cLeft = el("div", null);
+            var cName = el("div", "subfund-name", "📈 " + cFund.name);
+            var cStat = el("div", "subfund-stat");
+            if(cMasked){
+              cStat.textContent = "เดือนนี้ +xxxx  -xxxx";
+            } else {
+              cStat.textContent = "เดือนนี้ +" + fmt(cs.mi) + "  -" + fmt(cs.me);
+            }
+            cLeft.appendChild(cName); cLeft.appendChild(cStat);
+
+            var cAmt = el("div", "subfund-amt " + (cMasked ? "mut" : (cs.tot < 0 ? "exp" : "inc")));
+            if(cMasked){
+              cAmt.textContent = "xxxx ฿";
+            } else {
+              cAmt.textContent = money(cs.tot);
+            }
+            var cSub = el("small", null, isChildSel ? "กำลังเลือกดู" : "แตะเพื่อดูเฉพาะรายการ");
+            cAmt.appendChild(cSub);
+            itemChild.appendChild(cLeft); itemChild.appendChild(cAmt);
+
+            itemChild.onclick = function(e){
+              e.stopPropagation();
+              S.fund = (S.fund === cFund.id ? "all" : cFund.id);
+              if(S.fund !== "all") $("fFund").value = cFund.id;
+              render();
+            };
+            subList.appendChild(itemChild);
+          });
+
+          subBox.appendChild(subList);
+        }
+
+        c.appendChild(subBox);
+      }
+
       // กล่องและปุ่มจัดการสิทธิ์ & ความเป็นส่วนตัว
       var myFund = isMyFund(r.k);
       var owner = getFundOwner(r.k);
       var p = (S.privacy && S.privacy[r.k]) || {};
       var isGranted = p.viewGrantedUntil && Date.now() < p.viewGrantedUntil;
 
-      // กล่องแจ้งเตือนคำขอ (เจ้าของบัญชีเห็นเมื่ออีกฝ่ายขอดูยอด)
       if(myFund && p.requestPending){
         var reqBox = el("div", "pending-req-box");
         var reqTit = el("div", "tit", "🔔 " + (p.requestedBy || "แฟน") + " ขอดูยอดเงิน " + fname(r.k));
@@ -1701,16 +2071,15 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
         c.appendChild(reqBox);
       }
 
-      // แถบแสดงสถานะสิทธิ์และความเป็นส่วนตัว
       var privRow = el("div", "fcard-priv");
       var privLeft = el("div", null);
       privLeft.style.display = "flex"; privLeft.style.gap = "4px"; privLeft.style.alignItems = "center";
 
       if(myFund){
-        var myBadge = el("span", "badge-owner", "👑 บัญชีของคุณ (แก้ไข/เพิ่ม/ลบได้)");
+        var myBadge = el("span", "badge-owner", "👑 บัญชีของคุณ");
         privLeft.appendChild(myBadge);
       } else if(owner && owner !== "all"){
-        var otherBadge = el("span", "badge-owner badge-locked", "🔒 เฉพาะ" + owner + "จัดการได้");
+        var otherBadge = el("span", "badge-owner badge-locked", "🔒 เฉพาะ" + owner);
         privLeft.appendChild(otherBadge);
       } else {
         var sharedBadge = el("span", "badge-owner", "🤝 กองกลาง");
@@ -1723,7 +2092,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
       if(myFund){
         if(isGranted){
-          var gBadge = el("span", "badge-owner badge-granted", "🟢 อีกฝ่ายดูยอดได้อีก " + hoursLeft(p.viewGrantedUntil));
+          var gBadge = el("span", "badge-owner badge-granted", "🟢 ดูยอดได้อีก " + hoursLeft(p.viewGrantedUntil));
           privRight.appendChild(gBadge);
           var bRevoke = el("button", "btn-priv", "✕ ปิดยอดทันที");
           bRevoke.title = "ยกเลิกสิทธิ์ดูยอดก่อนหมดเวลา 1 วัน";
@@ -1735,12 +2104,10 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
           var segBox = el("div", "priv-seg");
           var bOpen = el("button", "btn-priv-seg" + (!isHid ? " on-open" : ""), "👁️ เปิดยอด");
           bOpen.type = "button";
-          bOpen.title = "เปิดให้อีกฝ่ายเห็นยอดเงินได้ตามปกติ (ไม่ต้องกดขอ)";
           bOpen.onclick = function(e){ setFundVisibility(r.k, false, e); };
 
-          var bLock = el("button", "btn-priv-seg" + (isHid ? " on-lock" : ""), "🔒 ปิดยอด xxxx");
+          var bLock = el("button", "btn-priv-seg" + (isHid ? " on-lock" : ""), "🔒 ปิด xxxx");
           bLock.type = "button";
-          bLock.title = "ปิดยอดให้อีกฝ่ายเห็นเป็น xxxx (ต้องกดขอดูยอด)";
           bLock.onclick = function(e){ setFundVisibility(r.k, true, e); };
 
           segBox.appendChild(bOpen);
@@ -1748,23 +2115,21 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
           privRight.appendChild(segBox);
         }
       } else {
-        // อีกฝ่ายดูยอด
         var isHid = isFundHidden(r.k);
         if(!isHid){
-          var openBadge = el("span", "badge-owner", "👁️ เจ้าของเปิดยอดปกติ");
+          var openBadge = el("span", "badge-owner", "👁️ เจ้าของเปิดยอด");
           privRight.appendChild(openBadge);
         } else if(isGranted){
           var gBadge = el("span", "badge-owner badge-granted", "🟢 ดูยอดได้อีก " + hoursLeft(p.viewGrantedUntil));
           privRight.appendChild(gBadge);
         } else if(masked){
           if(p.requestPending){
-            var bPending = el("button", "btn-req pending", "⏳ ส่งคำขอแล้ว (รอ" + (owner || "เจ้าของ") + "อนุมัติ...)");
+            var bPending = el("button", "btn-req pending", "⏳ ส่งคำขอแล้ว");
             bPending.disabled = true;
             bPending.type = "button";
             privRight.appendChild(bPending);
           } else {
-            var bReq = el("button", "btn-req", "🔑 ขอดูยอดเงิน (1 วัน)");
-            bReq.title = "กดเพื่อส่งคำขอให้" + (owner || "เจ้าของ") + "อนุญาตให้ดูยอดเงิน 1 วัน";
+            var bReq = el("button", "btn-req", "🔑 ขอดูยอด 1 วัน");
             bReq.type = "button";
             bReq.onclick = function(e){ requestViewFund(r.k, e); };
             privRight.appendChild(bReq);
@@ -1798,7 +2163,6 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       tt.appendChild(document.createTextNode(" · แตะกองทุนเพื่อดูเฉพาะรายการ (แตะซ้ำเพื่อดูทั้งหมด)"));
     }
     fc.appendChild(tt);
-
     // 2. คำนวณระบบหารบิล (Split Bill)
     var curMonthAll = S.tx.filter(function(t){ return (t.date || "").slice(0,7) === key; });
     var partner = S.members.find(function(m){ return m && m !== S.name; }) || "แฟน";
@@ -1888,12 +2252,31 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
     var q = ($("searchTx").value || "").trim().toLowerCase();
     var catFilter = $("filterCat").value || "all";
 
+    var afb = $("activeFundFilterBox");
+    if(afb){
+      if(S.fund !== "all"){
+        afb.classList.remove("hide");
+        afb.className = "filter-active-bar";
+        afb.textContent = "";
+        var afbText = el("span", null, "📁 กรองเฉพาะ: " + fundFilterLabel(S.fund));
+        var afbReset = el("button", null, "✕ ดูทุกกองทุน");
+        afbReset.type = "button";
+        afbReset.onclick = function(){
+          S.fund = "all";
+          render();
+        };
+        afb.appendChild(afbText); afb.appendChild(afbReset);
+      } else {
+        afb.classList.add("hide");
+      }
+    }
+
     var items = S.tx.filter(function(t){
       if((t.date || "").slice(0,7) !== key) return false;
-      if(S.fund !== "all" && fundOf(t) !== S.fund && t.toFund !== S.fund) return false;
+      if(!fundMatchesFilter(t, S.fund)) return false;
       if(catFilter !== "all" && t.category !== catFilter) return false;
       if(q){
-        var str = ((t.category||"") + " " + (t.note||"") + " " + (t.by||"") + " " + fname(t.fund)).toLowerCase();
+        var str = ((t.category||"") + " " + (t.note||"") + " " + (t.by||"") + " " + fname(t.fund) + " " + (t.toFund ? fname(t.toFund) : "")).toLowerCase();
         if(str.indexOf(q) === -1) return false;
       }
       return true;
@@ -1908,7 +2291,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       // Title
       var tTitle = "";
       if(t.type === "transfer"){
-        tTitle = "🔁 โอน: " + fname(t.fund) + " ➔ " + fname(t.toFund) + (t.note ? " · " + t.note : "");
+        tTitle = "🔁 โอน: " + fnameShort(t.fund) + " ➔ " + fnameShort(t.toFund) + (t.note ? " · " + t.note : "");
       } else if(t.type === "settle"){
         tTitle = "🤝 เคลียร์ยอดหารบิล" + (t.note ? " · " + t.note : "");
       } else {
@@ -1922,6 +2305,8 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
         s.appendChild(el("span", "tag acc", "โอนเงิน"));
       } else if(S.fund === "all"){
         s.appendChild(el("span", "tag", fname(fundOf(t))));
+      } else {
+        s.appendChild(el("span", "tag", fnameShort(fundOf(t))));
       }
       s.appendChild(el("span", "tag", who(t.by)));
       var masked = isFundMasked(fundOf(t));
@@ -1944,16 +2329,22 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
       } else if(t.type === "inc"){ aCls += "inc"; aTxt = "+" + fmt(t.amount); }
       else if(t.type === "exp"){ aCls += "exp"; aTxt = "-" + fmt(t.amount); }
       else if(t.type === "transfer"){
-        if(S.fund === "all"){ aCls += "acc"; aTxt = fmt(t.amount); }
-        else if(S.fund === t.fund){ aCls += "exp"; aTxt = "-" + fmt(t.amount); }
-        else { aCls += "inc"; aTxt = "+" + fmt(t.amount); }
+        if(S.fund === "all"){
+          aCls += "acc"; aTxt = fmt(t.amount);
+        } else if(S.fund === t.fund || S.fund === t.fund + ":main"){
+          aCls += "exp"; aTxt = "-" + fmt(t.amount);
+        } else if(S.fund === t.toFund){
+          aCls += "inc"; aTxt = "+" + fmt(t.amount);
+        } else {
+          aCls += "acc"; aTxt = fmt(t.amount);
+        }
       } else if(t.type === "settle"){
         aCls += "warn"; aTxt = fmt(t.amount);
       }
       var a = el("div", aCls, aTxt);
       if(masked) a.title = "ยอดเงินถูกซ่อนไว้";
 
-      // Actions (Edit & Delete - เฉพาะเจ้าของกองทุนหรือผู้สร้าง)
+      // Actions
       var acts = el("div", null);
       acts.style.display = "flex"; acts.style.gap = "4px"; acts.style.alignItems = "center";
 
@@ -2002,7 +2393,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
 
     var exps = curMonthAll.filter(function(t){
       if(isFundMasked(fundOf(t))) return false;
-      return t.type === "exp" && (S.fund === "all" || fundOf(t) === S.fund);
+      return t.type === "exp" && fundMatchesFilter(t, S.fund);
     });
 
     var sumBox = $("chartSummary"), barsBox = $("chartBars"), byBox = $("chartByPerson");
